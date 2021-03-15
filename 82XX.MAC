@@ -1,0 +1,7 @@
+;	82XX.MAC - 82XX CHIP SET DEFINITION
+
+;  8275 display adapter (russian analog - K580VG75)
+DISP	equ	0F7C0h
+; Status register
+DISP_INTE_Flag	equ	40h
+DISP_INTR_Flag	equ	20h

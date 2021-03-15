@@ -1,0 +1,30 @@
+;** RK86.MAC - Radio-86 computer specific constants & macro ***
+;
+;	09-Oct-1992  - first version
+;	15-Nov-1992  - Add 82XX.MAC
+
+?Ctrl	equ	40h
+?Shift	equ	20h
+
+; IN and OUT MACRO comands
+@in	MACRO	addr
+	lda	addr
+	ENDM
+
+@out	MACRO	addr
+	sta	addr
+	ENDM
+
+;************ Controller's mapping ****************
+FDC	equ	0F700h;				  *
+INTR	equ	0F720h;  8259 interrupt controller*
+PSG1	equ	0F740h;  8253 first	          *
+PSG2	equ	0F760h;  8253 second	      	  *
+PPI	equ	0F780h;  8255 fist		  *
+PPI2	equ	0F7A0h;  8255 second	   	  *
+DISP	equ	0F7C0h;  8275 display adapter	  *
+DMA	equ	0F7E0h;  8257 DMA chip	    	  *
+;**************************************************
+7C0h;  8275 display adapter	  *
+DMA	equ	0F7E0h;  8257 DMA chip	    	  *
+;********
