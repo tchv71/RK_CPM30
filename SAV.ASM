@@ -62,7 +62,3 @@ FCB:	DB	0,'CPM     BIN'
 	ENDM
 
 	END
-
-eate:
-	call	prnt
-	db	'Can''t create CPM.BI
