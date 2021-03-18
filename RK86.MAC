@@ -25,6 +25,3 @@ PPI2	equ	0F7A0h;  8255 second	   	  *
 DISP	equ	0F7C0h;  8275 display adapter	  *
 DMA	equ	0F7E0h;  8257 DMA chip	    	  *
 ;**************************************************
-7C0h;  8275 display adapter	  *
-DMA	equ	0F7E0h;  8257 DMA chip	    	  *
-;********
