@@ -303,4 +303,6 @@ LastCommand:	ds	1
 LastAddr:	ds	2
 LastSize:	ds	2
 TryCounter:	db	MaxTrying
+SECB1::	ds	1024
+SECB2::	ds	1024
 	END

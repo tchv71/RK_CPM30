@@ -178,7 +178,8 @@ SELDSK:	LXI	H,0
 	DAD	D
 	RET
 
-CHECK_D:LDA	OLDDSK
+CHECK_D::
+	LDA	OLDDSK
 	MOV	B,A
 	LDA	CPM_DISK
 	CMP	B
@@ -267,7 +268,7 @@ NO_TRAN:INR	A
 	RET
 endif
 ;---------------------------------
-SET_PARAMS:
+SET_PARAMS::
 	lxi	h,FLP_TBL ; Floppy disk physical parameter table
 	lda	CPM_DISK
 	cpi	FLOP80
@@ -319,10 +320,10 @@ WR_REC::
 	LDA	CPM_DISK
 	CPI	RAMDISK
 	JZ	RamD_W	; Check for ramdisk call.
-        jmp	FlpD_W
+	jmp	FlpD_W
 
 
-OLDDSK:	DB	0	; LAST CP/M DISK
+OLDDSK::	DB	0	; LAST CP/M DISK
 
 
 
@@ -338,18 +339,18 @@ BAD::	MVI	A,0FFH
 ;		CP/M DISK BIOS VARIABLES
 
 IO_RESULT:DS	1
-SECT:	ds	1
-SIDE:	ds	1
+SECT::	ds	1
+SIDE::	ds	1
 DRIVE:	ds	1
 
-CPM_TRACK:	DB	0
-CPM_RECORD:	DB	0
-CPM_DISK:	DB	0
+CPM_TRACK::	DB	0
+CPM_RECORD::	DB	0
+CPM_DISK::	DB	0
 
-DMA_ADDR:	DW	0
+DMA_ADDR::	DW	0
 DPTR:		DW	0
 
 STK_SAVE:	DS	2
-OLDF40:		ds	1
+OLDF40::		ds	1
 		END
 		

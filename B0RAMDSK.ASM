@@ -1,6 +1,7 @@
 ; 	B0RAMDSK.ASM - RK-86 ram disk operations
 
 ;	 7-sep-1993 - separate module
+	.8080
 
 PUBLIC	RamD_R,RamD_W
 
@@ -15,6 +16,9 @@ RamD_R:	CALL	CMP_ADR
 ; WRITE ONE SECTOR TO RAM DISK
 RamD_W:	CALL	CMP_ADR
 	JMP	RAM_TO_EXT
+
+RamD_I::
+	RET
 
 ; Compute address for ramdisk operations
 ; Out:	HL - DMA address 	(RAM)
@@ -42,7 +46,7 @@ CMP_ADR:LDA	CPM_TRACK
 ;	hl - RAM  addr (to)
 ;	de - ERAM addr (from)
 ;	bc - length
-RAM_TO_EXT:
+RAM_TO_EXT::
 	shld	@@tmp
 	lxi	h,0
 	dad	sp
@@ -75,7 +79,7 @@ WR_LP:	DCX	H
 ;	hl - RAM addr  (to)
 ;	de - ERAM addr (from)
 ;	bc - length
-EXT_TO_RAM:
+EXT_TO_RAM::
 	shld	@@tmp
 	lxi	h,0
 	dad	sp
@@ -120,3 +124,4 @@ SHR_BC:
 
 @@tmp:	ds	2
 STK_SAVE:	ds	2
+	END
