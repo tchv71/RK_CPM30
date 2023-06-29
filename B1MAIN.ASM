@@ -16,7 +16,7 @@
 ;	INCLUDE         B0DISK.H
 ;	INCLUDE         B0LSTAUX.H
 
-EXTRN	PUTS	; FROM B0CONIO.ASM
+;EXTRN	PUTS	; FROM B0CONIO.ASM
 
 SYSPG	EQU	0	; THE PAGE OF SYSTEM RAM
 BDOSTRP EQU	5	;
@@ -31,23 +31,23 @@ B_BASE::
 WBOOT_ADR:
 	JMP	WBOOT	; Warm boot of the system
 
-	JMP	CON_ST##;~~\
-	JMP	 CONIN##;---)- Console I/O
-	JMP	CONOUT##;__/		(see B0CONIO.ASM)
+	JMP	CON_ST;##;~~\
+	JMP	 CONIN;##;---)- Console I/O
+	JMP	CONOUT;##;__/		(see B0CONIO.ASM)
 
-	JMP	LSTOUT##;______  LST and AUX functions
-	JMP	 PUNCH##;  !		(see B0LSTAUX.asm)
-	JMP	READER##;_/!
+	JMP	LSTOUT;##;______  LST and AUX functions
+	JMP	 PUNCH;##;  !		(see B0LSTAUX.asm)
+	JMP	READER;##;_/!
 ;			   !
-	JMP	 HOME@##;__!_________ Disk functions
-	JMP	SELDSK##;  !	 /	(see B0DISK.asm)
-	JMP	SETTRK##;  !	!
-	JMP	SETREC##;  !	!
-	JMP	SETDMA##;  !	!
-	JMP	RD_REC##;__!___/!
-	JMP	WR_REC##;  !	!
-	JMP	LST_ST##;_/	!
-	JMP	SECTRN##;______/
+	JMP	 HOME@;##;__!_________ Disk functions
+	JMP	SELDSK;##;  !	 /	(see B0DISK.asm)
+	JMP	SETTRK;##;  !	!
+	JMP	SETREC;##;  !	!
+	JMP	SETDMA;##;  !	!
+	JMP	RD_REC;##;__!___/!
+	JMP	WR_REC;##;  !	!
+	JMP	LST_ST;##;_/	!
+	JMP	SECTRN;##;______/
 
 	LXI	H,C_BASE+7CDH	; SPECIAL SUBROUTINE FOR CCP
 	MOV	A,M
@@ -60,20 +60,20 @@ WBOOT_ADR:
 ;------ FIRST TIME INITIALIZATION --------
 
 BOOT:	LXI	SP,100H
-	CALL	DskInit##
+	CALL	DskInit;##
 
-	CALL	SAV_SYS##
+	CALL	SAV_SYS;##
 
-	CALL	PRNT##
+	CALL	PRNT;##
 	DB	27,45H,	'CP/M-80 vers. 2.2'
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
 	DB	0DH,0AH,'BIOS vers. 3.0      (c) TCHV,1991-92'
 	DB	0DH,0AH,0
-	lxi	h,DSKVER##
+	lxi	h,DSKVER;##
 	call	PUTS
-	lxi	h,CONVER##
+	lxi	h,CONVER;##
 	call	PUTS
-	lxi	h,LSTVER##
+	lxi	h,LSTVER;##
 	call	PUTS
 	XRA	A
 	STA	DEF_DSK
@@ -81,9 +81,9 @@ BOOT:	LXI	SP,100H
 
 WBOOT:	; WARM START OF CP/M BIOS - LOADING SYSTEM
 	LXI	SP,100H
-WBT:	CALL	SETSCR##
+WBT:	CALL	SETSCR;##
 
-	CALL	LD_SYS##
+	CALL	LD_SYS;##
 
 	LHLD	C_BASE
 	MOV	A,L	; CHECK CP/M DISK PRESENCE
@@ -91,25 +91,25 @@ WBT:	CALL	SETSCR##
 	JNZ	ASKDOS
 
 	LXI	B,80H
-	CALL	SETDMA##
+	CALL	SETDMA;##
 	MVI	A,0C3H
 	STA	SYSPG
 	STA	BDOSTRP
 	LXI	H,WBOOT_ADR
 	SHLD	SYSPG+1
-	LXI	H,D_BASE##
+	LXI	H,D_BASE;##
   	SHLD	BDOSTRP+1
 	LDA	DEF_DSK
 	MOV	C,A
-	JMP	C_BASE##
+	JMP	C_BASE;##
 
-ASKDOS:	CALL	PRNT##
+ASKDOS:	CALL	PRNT;##
 	DB	10,13,'Ins DOS disk',0
 	CALL	0F803H
 	JMP	WBT
 
 
 
-	END
+;	END
 
 

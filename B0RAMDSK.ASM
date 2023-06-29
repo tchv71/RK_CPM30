@@ -5,7 +5,7 @@
 
 PUBLIC	RamD_R,RamD_W
 
-EXTRN	CPM_RECORD,CPM_TRACK,DMA_ADDR	; From BxDISK module
+;EXTRN	CPM_RECORD,CPM_TRACK,DMA_ADDR	; From BxDISK module
 
 
 ;------ RAM DISK OPERATIONS -------------
@@ -124,4 +124,5 @@ SHR_BC:
 
 @@tmp:	ds	2
 STK_SAVE:	ds	2
+RAMDSK_END::
 	END

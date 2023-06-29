@@ -1,6 +1,6 @@
 ; *****	B1DISPB.ASM - Display parameter block *********
 
-INCLUDE A:SCREEN.MAC
+;INCLUDE A:SCREEN.MAC
 
 S	equ	0b	; All/Odd lines to display    (0/1)
 VV	equ	00b	; Frame reverse time:   00 - 1 T_Row
@@ -20,6 +20,6 @@ Disp_PB::	db	S*128+PHYS_W-1
 		db	UUUU*16+LLLL
 		db	@M*128+@F*64+CC*16+ZZZZ
 		dw	SCR_BUFF,PHYS_W*PHYS_H-1; DMA parameters
-		END
+;		END
 
 		

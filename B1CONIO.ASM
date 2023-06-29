@@ -13,9 +13,9 @@ CONVER::
 PUBLIC		CON_ST,CONIN,CONOUT
 PUBLIC		PRNT,PUTS
 
-INCLUDE A:RK86.MAC
-INCLUDE A:82XX.MAC
-INCLUDE A:SCREEN.MAC
+;INCLUDE RK86.MAC
+;INCLUDE 82XX.MAC
+;INCLUDE SCREEN.MAC
 
 ;------------------ Console Input ------------------------
 
@@ -460,7 +460,7 @@ GOTOXY:	MVI	A,80H	; Cursor move command
 	@OUT	DISP
 	RET
 
-EXTRN	Disp_PB
+;EXTRN	Disp_PB
 
 ; Set a screen mode according to Disp_PB
 SETSCR::
@@ -524,5 +524,5 @@ CHPNT:	DW	VRAM	; Current position in screen buffer
 CURX:	DB	SCR_W	; Current cursor location ( from DOWN-RIGHT corner)
 CURY:	DB	SCR_H
 STRADR:	DW	VRAM	; Start of current line
-	end
+;	end
 

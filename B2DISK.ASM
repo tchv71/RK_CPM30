@@ -17,13 +17,13 @@ DSKVER::	DB	10,13,'Disk BIOS V3.1      7-sep-1993',0
 ;	 7-sep-1993 - add some comments & transfer disk features into
 ;		      separate modules
 
-EXTRN ChgDrive,WT_END_CMD
+;EXTRN ChgDrive,WT_END_CMD
 
-EXTRN RamD_R,RamD_W,RamD_I,RAM_TO_EXT,EXT_TO_RAM
+;EXTRN RamD_R,RamD_W,RamD_I,RAM_TO_EXT,EXT_TO_RAM
 
-EXTRN FlpD_R,FlpD_W,FlpD_I,FLSH_WB,LAST_OPER,FLP_TBL
+;EXTRN FlpD_R,FlpD_W,FlpD_I,FLSH_WB,LAST_OPER,FLP_TBL
 
-INCLUDE B0DISK.MAC
+;INCLUDE B0DISK.MAC
 
 PROFI_DISKS	EQU	1
 MaxDiskCode		EQU	'E'   ; Maximum disk code
@@ -141,17 +141,17 @@ DskInit:
         
 
 SAV_SYS::
-	LXI	H,C_BASE##
+	LXI	H,C_BASE;##
 	LXI	D,0
-	lxi	b,C_SIZE##+D_SIZE##
+	lxi	b,C_SIZE+D_SIZE
 	jmp	RAM_TO_EXT
 
 LD_SYS::
 	CALL	FLSH_WB
 
-	LXI	H,C_BASE##
+	LXI	H,C_BASE;##
 	LXI	D,0
-	lxi	b,C_SIZE##+D_SIZE##
+	lxi	b,C_SIZE+D_SIZE
 	jmp	EXT_TO_RAM
 
 ;------ SOME CP/M BIOS FUNCTIONS -------
@@ -214,13 +214,13 @@ CHECK_D::
 	PUSH	PSW
 	LDA	DRIVE
 	CALL	ChgDrive
-	CALL	PRNT##
+	CALL	PRNT;##
 	DB	10,13,'Ins disk ',0
 	POP	PSW
 	ADI	'A'
 	MOV	C,A
-	CALL	CONOUT##
-	CALL	PRNT##
+	CALL	CONOUT;##
+	CALL	PRNT;##
 	DB	': & type a key',10,13,0
 	JMP	0F803H
 
@@ -328,7 +328,7 @@ OLDDSK::	DB	0	; LAST CP/M DISK
 
 
 BAD::	MVI	A,0FFH
-	STA	IO_RESULT
+	STA	_IO_RESULT
 	RET
 
 ;	CALL	PRNT##
@@ -338,7 +338,7 @@ BAD::	MVI	A,0FFH
 ; --------------------------------------------------------
 ;		CP/M DISK BIOS VARIABLES
 
-IO_RESULT:DS	1
+_IO_RESULT:DS	1
 SECT::	ds	1
 SIDE::	ds	1
 DRIVE:	ds	1
@@ -350,7 +350,7 @@ CPM_DISK::	DB	0
 DMA_ADDR::	DW	0
 DPTR:		DW	0
 
-STK_SAVE:	DS	2
+;STK_SAVE:	DS	2
 OLDF40::		ds	1
-		END
+;		END
 		

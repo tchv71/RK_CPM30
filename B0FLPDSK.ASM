@@ -4,22 +4,22 @@
 ;*  (c) TCHV,1993						*
 ;****************************************************************
 
-INCLUDE B0DISK.MAC
+;INCLUDE B0DISK.MAC
 
 PUBLIC FLPD_R,FLPD_W,FLSH_WB,FLP_TBL
 
-EXTRN	SECB1,SECB2 ; Externally allocated sector buffers
+;EXTRN	SECB1,SECB2 ; Externally allocated sector buffers
 
-EXTRN	CHECK_D
-EXTRN	OLDF40,OLDDSK
+;EXTRN	CHECK_D
+;EXTRN	OLDF40,OLDDSK
 
-EXTRN	CPM_RECORD,CPM_TRACK,DMA_ADDR
-EXTRN	SET_PARAMS
+;EXTRN	CPM_RECORD,CPM_TRACK,DMA_ADDR
+;EXTRN	SET_PARAMS
 
 ;**********  From FDCNTR module ************************************
-EXTRN	HOME,POSIT,FD_WR_INIT,FD_RD_INIT,WT_END_CMD,ABRT_CMD
-EXTRN	START_NOT_SECTOR_OPERATION,Side,SECT
-EXTRN	OPER,ChgDrive
+;EXTRN	HOME,POSIT,FD_WR_INIT,FD_RD_INIT,WT_END_CMD,ABRT_CMD
+;EXTRN	START_NOT_SECTOR_OPERATION,Side,SECT
+;EXTRN	OPER,ChgDrive
 ;*******************************************************************
 
 ;Debug	equ	1
@@ -28,7 +28,7 @@ MARK	MACRO	SYM
 ifdef Debug
 	PUSH	B
 	MVI	C,SYM
-	CALL	CONOUT##
+	CALL	CONOUT;##
 	POP	B
 endif
 	ENDM
@@ -45,28 +45,29 @@ endif
 	ENDM
 
 ifdef Debug
+HEXOUT	equ	0F815h
 MR_POS:
 	push	b
-	call	HEXOUT##
+	call	HEXOUT;##
 	call	PRNT
 	db	' S:',0
 	lda	cpm_RECORD
-	CALL	HEXOUT##
+	CALL	HEXOUT;##
 	call	prnt
 	db	' Drive:',0
 	lda	CPM_DISK
 	adi	'A'
 	mov	c,a
-	call	CONOUT##
+	call	CONOUT;##
 	call	prnt
 	db	' C:',0
 	pop	b
 	mov	a,c
-	CALL	HEXOUT##
+	CALL	HEXOUT;##
 	CALL	0F81BH
 	INR	A
 	RZ
-@01:	CALL	conin##
+@01:	CALL	conin;##
 	CPI	'S'
 	JZ	@01
 	RET
@@ -456,4 +457,4 @@ NXT_STN:DS	3
 
 NEW_STN:DS	3	; NEW REC. SETTINGS
 IO_RESULT:	ds	1
-	END
+;	END

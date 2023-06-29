@@ -5,3 +5,11 @@ RK Enhancements/.DS_Store
 /Boot2.bin
 /Boot.bin.NoiCtx
 /Boot.bin
+/Debug/RK_CPM30.log
+/x64/Debug/RK_CPM30.Build.CppClean.log
+/x64/Debug/RK_CPM30.log
+/Debug/RK_CPM30.Build.CppClean.log
+*.REL
+*.SYM
+*.PRN
+*.BIN

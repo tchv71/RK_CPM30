@@ -1,7 +1,7 @@
 ;	B0LSTAUX.ASM - LST AND AUX FUNCTIONS
 LSTVER::	DB	10,13,'LST/AUX DRIVER V3.02     31-May-1993',0
 
-INCLUDE A:RK86.MAC
+;INCLUDE RK86.MAC
 
 ;--------- AUX DRIVER       (C) TCHV ------------
 
@@ -134,5 +134,5 @@ IF	TabReplace
 TabLeft:	db	TabSize
 ENDIF
 ENDIF	; NoPrint
-	END
+;	END
 

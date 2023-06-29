@@ -15,7 +15,7 @@ Debug		equ	1
 PUBLIC	HOME,POSIT,FD_WR_INIT,FD_RD_INIT,STPMTR,WT_END_CMD
 PUBLIC	OPER,ChgDrive,ABRT_CMD,START_NOT_SECTOR_OPERATION
 
-EXTRN	BAD	; user hook if a bad sector detected
+;EXTRN	BAD	; user hook if a bad sector detected
 ;-------------------------------------------------
 
 	.8080
@@ -34,7 +34,7 @@ busy:	lda	FDC_Com_Stat
 	ani	1
 	jnz	busy
 	pop	psw
-	sta	drive	; to be extended
+	sta	_drive	; to be extended
 	call	Home	; Track is not remembered
 	call	Wt_end_cmd
 	call	Home
@@ -162,10 +162,10 @@ WT_EC:	LDA	FDC_Cntrl; WAIT FOR INRQ
 	RET
 
 
-	dseg
+	;dseg
 WAIT_RQ:db	0
 ?40TRK:	DB	0FFH
-	cseg
+	;cseg
 
 ; Repeat last controller command
 Repeat_Command:
@@ -286,7 +286,7 @@ START_CMD:
 	ORI	20H	; HLD IMITATION & DRIVE 1 SELECT
 	push	b
 	mov	b,a
-	lda	drive
+	lda	_drive
 	ora	b
 	pop	b
 	STA	FDC_Cntrl
@@ -295,8 +295,8 @@ START_CMD:
 	ret
 
 
-	dseg
-DRIVE:	DB	1
+	;dseg
+_DRIVE:	DB	1
 Last_Operation_Kind:	db	0
 Last_SideSect:	ds	2
 LastCommand:	ds	1
@@ -305,4 +305,4 @@ LastSize:	ds	2
 TryCounter:	db	MaxTrying
 SECB1::	ds	1024
 SECB2::	ds	1024
-	END
+;	END
