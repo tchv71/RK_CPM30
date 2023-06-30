@@ -75,5 +75,8 @@
     <None Include="B0SD.ASM">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="README.md">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
   </ItemGroup>
 </Project>

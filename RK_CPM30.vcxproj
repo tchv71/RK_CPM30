@@ -105,6 +105,7 @@
     <None Include="Cpm.ASM" />
     <None Include="FDCNTR.ASM" />
     <None Include="Makefile" />
+    <None Include="README.md" />
     <None Include="RK86.MAC" />
     <None Include="SAV.ASM" />
     <None Include="SCREEN.MAC" />

@@ -41,12 +41,13 @@ ChangeViewMode:
 	shld	ViewPtr
 	pop	h
 	sta	ViewMode
-	sta	SCR_BUFF
+	;sta	SCR_BUFF
+	sta	PALM_CNTRL
 	jmp	CONIN
 
 ViewPtr: dw	ViewTbl
-ViewTbl: db	84h,85h,80h,0 ; ,81h,0 - Not necesarry
-ViewMode:db	20h;84H
+ViewTbl: db	80h,0c0h,0 ; 84h,85h,80h,0 ; ,81h,0 - Not necesarry
+ViewMode:db	0C0h;84H
 
 ; Perform key translation Acc->Acc
 CorrCntrl:
@@ -120,7 +121,8 @@ CONOUT:	PUSH	H
 	PUSH	D
 	PUSH	PSW
 	LDA	ViewMode
-	STA	SCR_BUFF
+	;STA	SCR_BUFF
+	STA	PALM_CNTRL
 	MOV	A,C
 	ANI	7FH
 	LHLD	CHPNT

@@ -1,4 +1,7 @@
 FlpD_I:
+	XRA	A
+	STA	OLDDSK
+	RET
 FLSH_WB:
 WT_END_CMD:
 ChgDrive:
