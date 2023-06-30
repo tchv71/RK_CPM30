@@ -46,7 +46,7 @@ ChangeViewMode:
 	jmp	CONIN
 
 ViewPtr: dw	ViewTbl
-ViewTbl: db	80h,0c0h,0 ; 84h,85h,80h,0 ; ,81h,0 - Not necesarry
+ViewTbl: db	0c0h,80h,0 ; 84h,85h,80h,0 ; ,81h,0 - Not necesarry
 ViewMode:db	0C0h;84H
 
 ; Perform key translation Acc->Acc

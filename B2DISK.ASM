@@ -155,13 +155,28 @@ SAV_SYS::
 	jmp	RAM_TO_EXT
 
 LD_SYS::
-	RET
-	CALL	FLSH_WB
-
-	LXI	H,C_BASE;##
+	LXI	H,CPM_BIN
+	MVI	D,0
+	CALL	CmdOpenDelete
 	LXI	D,0
-	lxi	b,C_SIZE+D_SIZE
-	jmp	EXT_TO_RAM
+	LXI	H,4
+	MVI	B,0
+	CALL	CmdSeekGetSize
+
+	LXI	D,C_BASE
+	LXI	H,C_SIZE+D_SIZE
+	CALL	CmdRead
+	JMP	SD_I01
+
+CPM_BIN:
+	DB	'CPM/CPM.BIN',0
+
+;	CALL	FLSH_WB
+;
+;	LXI	H,C_BASE;##
+;	LXI	D,0
+;	lxi	b,C_SIZE+D_SIZE
+;	jmp	EXT_TO_RAM
 
 ;------ SOME CP/M BIOS FUNCTIONS -------
 
