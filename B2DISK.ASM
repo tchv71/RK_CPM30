@@ -149,27 +149,10 @@ DskInit:
 
 SAV_SYS::
 	RET
-	LXI	H,C_BASE;##
-	LXI	D,0
-	lxi	b,C_SIZE+D_SIZE
-	jmp	RAM_TO_EXT
-
-LD_SYS::
-	LXI	H,CPM_BIN
-	MVI	D,0
-	CALL	CmdOpenDelete
-	LXI	D,0
-	LXI	H,4+3
-	MVI	B,0
-	CALL	CmdSeekGetSize
-
-	LXI	D,C_BASE
-	LXI	H,C_SIZE+D_SIZE
-	CALL	CmdRead
-	JMP	SD_I01
-
-CPM_BIN:
-	DB	'CPM/CPM.BIN',0
+;	LXI	H,C_BASE;##
+;	LXI	D,0
+;	lxi	b,C_SIZE+D_SIZE
+;	jmp	RAM_TO_EXT
 
 ;	CALL	FLSH_WB
 ;
