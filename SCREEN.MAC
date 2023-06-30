@@ -1,8 +1,8 @@
 ;	SCREEN.MAC - bios screen parameters
 
-SCR_BUFF	EQU	0e6d0h
+SCR_BUFF	EQU	0b6d0h
 
-PHYS_W		EQU	80
+PHYS_W		EQU	78
 PHYS_H  	equ	29
 SCR_SIZE	equ	PHYS_W*PHYS_H
 
@@ -11,7 +11,7 @@ FirstStr	equ	2
 
 VRAM	EQU	SCR_BUFF+FirstStr*PHYS_W
 
-SCR_W	EQU	80
+SCR_W	EQU	78
 SCR_H	EQU	25
 
 ENDSCR	EQU	VRAM+SCR_H*PHYS_W

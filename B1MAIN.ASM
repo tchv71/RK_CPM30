@@ -40,7 +40,7 @@ WBOOT_ADR:
 	JMP	READER;##;_/!
 ;			   !
 	JMP	 HOME@;##;__!_________ Disk functions
-	JMP	SELDSK;##;  !	 /	(see B0DISK.asm)
+	JMP	SELDSK;##;  !	 /	(see B2DISK.asm)
 	JMP	SETTRK;##;  !	!
 	JMP	SETREC;##;  !	!
 	JMP	SETDMA;##;  !	!

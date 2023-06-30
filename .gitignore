@@ -13,3 +13,8 @@ RK Enhancements/.DS_Store
 *.SYM
 *.PRN
 *.BIN
+/Debug/RK_CPM30.vcxproj.AssemblyReference.cache
+*.NOI
+*.NoiCtx
+/CPM.PRN.ASM
+/CPM.rkl

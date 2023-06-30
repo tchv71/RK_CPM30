@@ -46,7 +46,7 @@ ChangeViewMode:
 
 ViewPtr: dw	ViewTbl
 ViewTbl: db	84h,85h,80h,0 ; ,81h,0 - Not necesarry
-ViewMode:db	84H
+ViewMode:db	20h;84H
 
 ; Perform key translation Acc->Acc
 CorrCntrl:

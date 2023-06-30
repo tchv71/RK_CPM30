@@ -1,0 +1,1 @@
+Place this dir (CPM) into SD root folder

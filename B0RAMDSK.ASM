@@ -125,4 +125,4 @@ SHR_BC:
 @@tmp:	ds	2
 STK_SAVE:	ds	2
 RAMDSK_END::
-	END
+;	END

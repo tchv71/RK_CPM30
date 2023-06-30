@@ -323,7 +323,7 @@ CLC_OFF:DCR	C	; CALCULATE OFFSET
 	DAD	D
 	JMP	CLC_OFF
 
-;**********  Write current record to currentlu selected floppy disk ********
+;**********  Write current record to currently selected floppy disk ********
 FLPD_W: MARK_POS	'Writing'
 	XRA	A
 	STA	IO_RESULT

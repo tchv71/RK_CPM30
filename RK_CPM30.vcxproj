@@ -91,8 +91,10 @@
   <ItemGroup>
     <None Include="82XX.MAC" />
     <None Include="B0DISK.MAC" />
+    <None Include="b0FlpDmy.asm" />
     <None Include="B0FLPDSK.ASM" />
     <None Include="B0RAMDSK.ASM" />
+    <None Include="B0SD.ASM" />
     <None Include="B1CONIO.ASM" />
     <None Include="B1DISPB.ASM" />
     <None Include="B1LSTAUX.ASM" />
@@ -106,6 +108,7 @@
     <None Include="RK86.MAC" />
     <None Include="SAV.ASM" />
     <None Include="SCREEN.MAC" />
+    <None Include="sdbios.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

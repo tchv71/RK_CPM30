@@ -66,5 +66,14 @@
     <None Include="SCREEN.MAC">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="sdbios.asm">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="b0FlpDmy.asm">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="B0SD.ASM">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>
