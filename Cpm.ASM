@@ -1,4 +1,4 @@
-	.phase 9500h;0BC00h
+	.phase 9500h-3;0BC00h
 include b0disk.mac
 include 82xx.mac
 include RK86.MAC

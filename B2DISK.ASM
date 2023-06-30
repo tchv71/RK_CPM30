@@ -159,7 +159,7 @@ LD_SYS::
 	MVI	D,0
 	CALL	CmdOpenDelete
 	LXI	D,0
-	LXI	H,4
+	LXI	H,4+3
 	MVI	B,0
 	CALL	CmdSeekGetSize
 
