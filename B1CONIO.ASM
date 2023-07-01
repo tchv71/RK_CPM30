@@ -53,7 +53,7 @@ ChangeViewMode:
 	pop	h
 	sta	ViewMode
 	;sta	SCR_BUFF
-	sta	PALM_CNTRL
+	@out	PALM_CNTRL
 	jmp	CONIN
 
 ViewPtr: dw	ViewTbl
@@ -133,7 +133,7 @@ CONOUT:	PUSH	H
 	PUSH	PSW
 	LDA	ViewMode
 	;STA	SCR_BUFF
-	STA	PALM_CNTRL
+	@out	PALM_CNTRL
 	MOV	A,C
 	ANI	7FH
 	LHLD	CHPNT

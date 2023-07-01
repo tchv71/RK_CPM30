@@ -417,11 +417,15 @@ StartCommand1:
      CALL       SwitchRecv
 
      ; Начало любой команды (это шина адреса)
-     LXI	H, USER_PORT+1
-     MVI        M, 0
-     MVI        M, 44h
-     MVI        M, 40h
-     MVI        M, 0h
+     ;LXI	H, USER_PORT+1
+     MVI        A,0
+     @out       USER_PORT+1
+     MVI        A,44h
+     @out       USER_PORT+1
+     MVI        A,40h
+     @out       USER_PORT+1
+     MVI        A,0
+     @out       USER_PORT+1
 
      ; Если есть синхронизация, то контроллер ответит ERR_START
      CALL	Recv
@@ -477,7 +481,7 @@ SwitchSend:
      CALL	Recv
 SwitchSend0:
      MVI	A, SEND_MODE
-     STA	USER_PORT+3
+     @out	USER_PORT+3
      RET
 
 ;----------------------------------------------------------------------------
@@ -536,7 +540,7 @@ SendString:
 
 SwitchRecv:
      MVI	A, RECV_MODE
-     STA	USER_PORT+3
+     @out	USER_PORT+3
      RET
 
 ;----------------------------------------------------------------------------
@@ -559,16 +563,21 @@ WaitForReady:
 ; Портим A
 
 RecvBlock:
-     PUSH	H
-     LXI 	H, USER_PORT+1
+     ;PUSH	H
+     ;LXI 	H, USER_PORT+1
      INR 	D
      XRA 	A
      ORA 	E
      JZ 	RecvBlock2
 RecvBlock1:
-     MVI        M, 20h			; 7
-     MVI        M, 0			; 7
-     LDA	USER_PORT		; 13
+     ;MVI        M, 20h			; 7
+     MVI        A, 20h
+     @out       USER_PORT+1
+     XRA        A
+     @out       USER_PORT+1
+
+     ;MVI        M, 0			; 7
+     @in	USER_PORT		; 13
      STAX	B		        ; 7
      INX	B		        ; 5
      DCR	E		        ; 5
@@ -576,7 +585,7 @@ RecvBlock1:
 RecvBlock2:
      DCR	D
      JNZ	RecvBlock1
-     POP	H
+     ;POP	H
      RET
 
 ;----------------------------------------------------------------------------
@@ -627,17 +636,17 @@ strcpy255_1:
 ; Отправить байт из A.
 
 Send:
-     STA	USER_PORT
+     @out	USER_PORT
 
 ;----------------------------------------------------------------------------
 ; Принять байт в А
 
 Recv:
      MVI	A, 20h
-     STA	USER_PORT+1
+     @out	USER_PORT+1
      XRA	A
-     STA	USER_PORT+1
-     LDA	USER_PORT
+     @out	USER_PORT+1
+     @in	USER_PORT
      RET
 
 ;----------------------------------------------------------------------------
