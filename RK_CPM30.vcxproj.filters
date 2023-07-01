@@ -78,5 +78,8 @@
     <None Include="README.md">
       <Filter>Файлы ресурсов</Filter>
     </None>
+    <None Include="E0GETC.ASM">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>

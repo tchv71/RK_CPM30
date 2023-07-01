@@ -19,8 +19,19 @@ PUBLIC		PRNT,PUTS
 
 ;------------------ Console Input ------------------------
 
-CON_ST:	JMP	0F812H
-CONIN::	CALL	0F803H
+CON_ST:
+IFNDEF OWN_GETC
+	JMP	0F812H
+ELSE
+	JMP	GETST
+ENDIF
+
+CONIN::
+IFDEF OWN_GETC
+	CALL	GETCHR
+ELSE
+	CALL 0F803H
+ENDIF
 	ora	a
 	jz	ChangeViewMode
 	cpi	20h

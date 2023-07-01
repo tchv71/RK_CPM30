@@ -1,10 +1,10 @@
-	.phase 9500h-3;0BC00h
+	.phase 9200h-3;0BC00h
 include b0disk.mac
 include 82xx.mac
 include RK86.MAC
 include SCREEN.MAC
-;B_BASE	equ	0A000h
 	JMP	BOOT
+OWN_GETC	EQU	1
 include CCP.ASM
 include BDOS.ASM
 include B1MAIN.ASM
@@ -18,6 +18,8 @@ include B0FlpDmy.ASM
 include b0RAMDSK.ASM
 include B0SD.ASM
 include sdbios.asm
-
+IFDEF OWN_GETC
+include E0GETC.ASM
+ENDIF
 	END
 

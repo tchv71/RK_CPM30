@@ -22,7 +22,7 @@ LD_SYS::
 	JMP	SD_I01
 
 CPM_BIN:
-	DB	'CPM/CPM.BIN',0
+	DB	'CPM/CPM.RKL',0
 
 
 ;------ RAM DISK OPERATIONS -------------

@@ -18,7 +18,7 @@
 ;************ Controller's mapping ****************
 ;FDC	equ	0F700h;				  *
 ;INTR	equ	0F720h;  8259 interrupt controller*
-;PSG1	equ	0F740h;  8253 first	          *
+PSG1	equ	0CC00h;  8253 first	          *
 ;PSG2	equ	0F760h;  8253 second	      	  *
 PPI	equ	0C200h;  8255 fist		  *
 PPI2	equ	0C400h;  8255 second	   	  *
