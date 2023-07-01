@@ -15,14 +15,25 @@
 	sta	addr
 	ENDM
 
+IFDEF	USE_PRG_DC
+;************ Controller's mapping ****************
+PSG1	equ	0F800h;  8253 first	          *
+PPI	equ	0F900h;  8255 first		  *
+PPI2	equ	0FA00h;  8255 second	   	  *
+DISP	equ	0FB00h;  8275 display adapter	  *
+DMA	equ	0FC00h;  8257 DMA chip	    	  *
+PALM_CNTRL equ	0FD00h;  Palmira control byte     *
+;**************************************************
+ELSE
 ;************ Controller's mapping ****************
 ;FDC	equ	0F700h;				  *
 ;INTR	equ	0F720h;  8259 interrupt controller*
 PSG1	equ	0CC00h;  8253 first	          *
 ;PSG2	equ	0F760h;  8253 second	      	  *
-PPI	equ	0C200h;  8255 fist		  *
+PPI	equ	0C200h;  8255 frist		  *
 PPI2	equ	0C400h;  8255 second	   	  *
 DISP	equ	0C000h;  8275 display adapter	  *
 DMA	equ	0E000h;  8257 DMA chip	    	  *
 PALM_CNTRL equ	0CE00h;  Palmira control byte     *
 ;**************************************************
+ENDIF

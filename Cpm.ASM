@@ -1,12 +1,32 @@
-	.phase 9200h-3;0BC00h
+OWN_GETC	EQU	1
+USE_PRG_DC	EQU	1
+IFDEF	USE_PRG_DC
+START_CCP	EQU 0CA00h
+ELSE
+START_CCP	EQU 9200h-3
+ENDIF
+
 include b0disk.mac
 include 82xx.mac
 include RK86.MAC
 include SCREEN.MAC
+
+IFDEF	USE_PRG_DC
+	.phase	100h
+include B0PRGDC.ASM
+	.dephase
+	.phase START_CCP
+ELSE
+	.phase START_CCP
 	JMP	BOOT
-OWN_GETC	EQU	1
+ENDIF
+
 include CCP.ASM
 include BDOS.ASM
+IFDEF	USE_PRG_DC
+	.dephase
+	.phase 0E000h
+ENDIF
 include B1MAIN.ASM
 include B2DISK.ASM
 ;include FDCNTR.ASM
@@ -21,5 +41,6 @@ include sdbios.asm
 IFDEF OWN_GETC
 include E0GETC.ASM
 ENDIF
+BIOS_END:
 	END
 

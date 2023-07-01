@@ -69,6 +69,9 @@ BOOT:	LXI	SP,100H
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
 	DB	0DH,0AH,'BIOS vers. 3.0      (c) TCHV,1991-92'
 	DB	0DH,0AH,0
+
+	;JMP	$
+
 	lxi	h,DSKVER;##
 	call	PUTS
 	lxi	h,CONVER;##
@@ -98,14 +101,14 @@ WBT:	CALL	SETSCR;##
 	LXI	H,WBOOT_ADR
 	SHLD	SYSPG+1
 	LXI	H,D_BASE;##
-  	SHLD	BDOSTRP+1
+	SHLD	BDOSTRP+1
 	LDA	DEF_DSK
 	MOV	C,A
 	JMP	C_BASE;##
 
 ASKDOS:	CALL	PRNT;##
 	DB	10,13,'Ins DOS disk',0
-	CALL	0F803H
+	CALL	CONIN
 	JMP	WBT
 
 

@@ -1,6 +1,10 @@
 ;	SCREEN.MAC - bios screen parameters
 
+IFDEF	USE_PRG_DC
+SCR_BUFF	EQU	0EEd0h
+ELSE
 SCR_BUFF	EQU	0b6d0h
+ENDIF
 
 PHYS_W		EQU	78
 PHYS_H  	equ	29+1

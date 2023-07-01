@@ -93,6 +93,7 @@
     <None Include="B0DISK.MAC" />
     <None Include="b0FlpDmy.asm" />
     <None Include="B0FLPDSK.ASM" />
+    <None Include="B0PRGDC.ASM" />
     <None Include="B0RAMDSK.ASM" />
     <None Include="B0SD.ASM" />
     <None Include="B1CONIO.ASM" />
