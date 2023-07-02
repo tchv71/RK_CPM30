@@ -154,8 +154,8 @@ ELSE
 	@out	PSG1+3
 	;MVI	L,0
 	MOV	A,C
-	@out	PSG1
-	@out	PSG1
+	;@out	PSG1
+	;@out	PSG1
 	;MOV	M,C
 	;MOV	M,C
 RP21:

@@ -13,8 +13,8 @@ CPM.BIN: CPM.REL Makefile
 #	L80 CCP,BDOS,B1MAIN,B2DISK,FDCNTR,B1CONIO,B1DISPB,B1LSTAUX,B0FLPDSK,B0RAMDSK,$@/N/Y/E
 	L80 /P:100,$<,$@/N/Y/E
 	../m80noi/x64/Release/m80noi.exe CPM.PRN
-	../makerk/Release/makerk.exe 100 $@ CPM.rkl
-#	../makerk/Release/makerk.exe 91FD $@ CPM.rkl
+#	../makerk/Release/makerk.exe 100 $@ CPM.rkl
+	../makerk/Release/makerk.exe 91FD $@ CPM.rkl
 
 CPM.rkl: CPM.BIN
 
