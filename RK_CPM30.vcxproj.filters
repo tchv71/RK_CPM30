@@ -45,9 +45,6 @@
     <None Include="FDCNTR.ASM">
       <Filter>Исходные файлы</Filter>
     </None>
-    <None Include="SAV.ASM">
-      <Filter>Исходные файлы</Filter>
-    </None>
     <None Include="Makefile">
       <Filter>Исходные файлы</Filter>
     </None>

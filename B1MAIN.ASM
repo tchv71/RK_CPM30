@@ -24,6 +24,7 @@ BDOSTRP EQU	5	;
 DEF_DSK	EQU	4
 IO_BYTE	EQU	3
 
+	ds	bios-$
 B_BASE::
 ;----------------------------------------------------
 ;	BIOS FUNCTION TABLE
@@ -63,7 +64,7 @@ BOOT:	LXI	SP,100H
 	CALL	DskInit;##
 	CALL	SETSCR
 	CALL	SAV_SYS;##
-
+	CALL	SETSCR
 	CALL	PRNT;##
 	DB	27,45H,	'CP/M-80 vers. 2.2'
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
