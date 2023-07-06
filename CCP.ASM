@@ -1,1014 +1,1291 @@
-	public	C_BASE,C_SIZE
+; Reformatted and converted for cross-assembly by Macro Assembler AS
+; Eric Smith <spacewar@gmail.com> 2018-01-24
+; from original source os2ccp.asm from
+;   http://www.cpm.z80.de/download/cpm2-plm.zip
 
+; Changes:
+;   multiple instructions per line split to separate lines
+;   dollar sign in labels replaced by underscore
+;   dollar sign (as digit separator) in binary constants removed
+;   single quotes around strings replaced with double quotes
+;   true and false replaced with _true and _false
+;   replaced "not" operator with "~"
+;   removed empty comments
+;   added ifdef origin to allow origin to be specified from command line
+;   added commments about serial number
+;   added ifdefs on "noserial" to omit serialization check
+
+
+	.8080;.cpu	8080
+
+	title	"console command processor (CCP), ver 2.0"
+;	assembly language version of the CP/M console command processor
+
+;	version 2.2 February, 1980
+
+;	Copyright (c) 1976, 1977, 1978, 1979, 1980
+;	Digital Research
+;	Box 579, Pacific Grove,
+;	California, 93950
+
+_false	equ	0000h
+;_true	equ	~_false
+testing	equ	_false	;true if debugging
+noserialize	equ	1
+
+	ifdef	origin
+	org	origin
+bdosl	equ	$+800h		;bdos location
+	else
+	if	testing
+	org	3400h
+bdosl	equ	$+800h		;bdos location
+	else
+	;org	000h
+bdosl	equ	$+800h		;bdos location
+	endif
+	endif
+tran	equ	100h
+tranm	equ	$
+ccploc	equ	$
+
+;	********************************************************
+;	*	Base of CCP contains the following code/data   *
+;	*	ccp:	jmp ccpstart	(start with command)   *
+;	*		jmp ccpclear    (start, clear command) *
+;	*	ccp+6	127		(max command length)   *
+;	*	ccp+7	comlen		(command length = 00)  *
+;	*	ccp+8	' ... '		(16 blanks)	       *
+;	********************************************************
+;	* Normal entry is at ccp, where the command line given *
+;	* at ccp+8 is executed automatically (normally a null  *
+;	* command with comlen = 00).  An initializing program  *
+;	* can be automatically loaded by storing the command   *
+;	* at ccp+8, with the command length at ccp+7.  In this *
+;	* case, the ccp executes the command before prompting  *
+;	* the console for input.  Note that the command is exe-*
+;	* cuted on both warm and cold starts.  When the command*
+;	* line is initialized, a jump to "jmp ccpclear" dis-   *
+;	* ables the automatic command execution.               *
+;	********************************************************
 C_BASE:
-L0004	EQU	04H
-L0005	EQU	05H
-L000B	EQU	0BH
-L005C	EQU	5CH
-L0080	EQU	80H
-L0081	EQU	81H
-L0100	EQU	0100H
-L76F3	EQU	76F3H ; DI; HLT
-LC400:		;C400
-	JMP	LC75C	;0C75CH
-	JMP	LC758	;0C758H
-LC406:		;C406
-	DB	7FH
-LC407:		;C407
-	DB	0
-LC408:		;C408
-	DS	0080H
-LC488:		;C488
-	DS	0002H
-LC48A:		;C48A
-	DS	0002H
-LC48C:		;C48C 
-	MOV	E,A
-	MVI	C,2
-	JMP	L0005	;5
-LC492:		;C492 
-	PUSH	B
-	CALL	LC48C	;0C48CH
-	POP	B
-	RET
-LC498:		;C498 
-	MVI	A,0DH
-	CALL	LC492	;0C492H
-	MVI	A,0AH
-	JMP	LC492	;0C492H
-LC4A2:		;C4A2 
-	MVI	A,' '	;20H
-	JMP	LC492	;0C492H
-LC4A7:		;C4A7 
-	PUSH	B
-	CALL	LC498	;0C498H
-	POP	H
-LC4AC:		;C4AC 
-	MOV	A,M
-	ORA	A
-	RZ
-	INX	H
-	PUSH	H
-	CALL	LC48C	;0C48CH
-	POP	H
-	JMP	LC4AC	;0C4ACH
-LC4B8:		;C4B8 
-	MVI	C,0DH
-	JMP	L0005	;5
-LC4BD:		;C4BD 
-	MOV	E,A
-	MVI	C,0EH
-	JMP	L0005	;5
-LC4C3:		;C4C3 
-	CALL	L0005	;5
-	STA	LCBEE	;0CBEEH
-	INR	A
-	RET
-LC4CB:		;C4CB 
-	MVI	C,0FH
-	JMP	LC4C3	;0C4C3H
-LC4D0:		;C4D0 
-	XRA	A
-	STA	LCBED	;0CBEDH
-	LXI	D,LCBCD	;0CBCDH
-	JMP	LC4CB	;0C4CBH
-LC4DA:		;C4DA 
-	MVI	C,10H
-	JMP	LC4C3	;0C4C3H
-LC4DF:		;C4DF 
-	MVI	C,11H
-	JMP	LC4C3	;0C4C3H
-LC4E4:		;C4E4 
-	MVI	C,12H
-	JMP	LC4C3	;0C4C3H
-LC4E9:		;C4E9 
-	LXI	D,LCBCD	;0CBCDH
-	JMP	LC4DF	;0C4DFH
-LC4EF:		;C4EF 
-	MVI	C,13H
-	JMP	L0005	;5
-LC4F4:		;C4F4 
-	CALL	L0005	;5
-	ORA	A
-	RET
-LC4F9:		;C4F9 
-	MVI	C,14H
-	JMP	LC4F4	;0C4F4H
-LC4FE:		;C4FE 
-	LXI	D,LCBCD	;0CBCDH
-	JMP	LC4F9	;0C4F9H
-LC504:		;C504 
-	MVI	C,15H
-	JMP	LC4F4	;0C4F4H
-LC509:		;C509 
-	MVI	C,16H
-	JMP	LC4C3	;0C4C3H
-LC50E:		;C50E 
-	MVI	C,17H
-	JMP	L0005	;5
-LC513:		;C513 
-	MVI	E,0FFH
-LC515:		;C515 
-	MVI	C,' '	;20H
-	JMP	L0005	;5
-LC51A:		;C51A
-	CALL	LC513	;0C513H
-	ADD	A
-	ADD	A
-	ADD	A
-	ADD	A
-	LXI	H,LCBEF	;0CBEFH
-	ORA	M
-	STA	L0004	;4
-	RET
-LC529:		;C529
-	LDA	LCBEF	;0CBEFH
-	STA	L0004	;4
-	RET
-LC530:		;C530 
-	CPI	61H
-	RC
-	CPI	7BH
-	RNC
-	ANI	5FH
-	RET
-LC539:		;C539 
-	LDA	LCBAB	;0CBABH
-	ORA	A
-	JZ	LC596	;0C596H
-	LDA	LCBEF	;0CBEFH
-	ORA	A
-	MVI	A,0
-	CNZ	LC4BD	;0C4BDH
-	LXI	D,LCBAC	;0CBACH
-	CALL	LC4CB	;0C4CBH
-	JZ	LC596	;0C596H
-	LDA	LCBBB	;0CBBBH
-	DCR	A
-	STA	LCBCC	;0CBCCH
-	LXI	D,LCBAC	;0CBACH
-	CALL	LC4F9	;0C4F9H
-	JNZ	LC596	;0C596H
-	LXI	D,LC407	;0C407H
-	LXI	H,L0080	;80H
-	MVI	B,80H
-	CALL	LC842	;0C842H
-	LXI	H,LCBBA	;0CBBAH
-	MVI	M,0
-	INX	H
-	DCR	M
-	LXI	D,LCBAC	;0CBACH
-	CALL	LC4DA	;0C4DAH
-	JZ	LC596	;0C596H
-	LDA	LCBEF	;0CBEFH
-	ORA	A
-	CNZ	LC4BD	;0C4BDH
-	LXI	H,LC408	;0C408H
-	CALL	LC4AC	;0C4ACH
-	CALL	LC5C2	;0C5C2H
-	JZ	LC5A7	;0C5A7H
-	CALL	LC5DD	;0C5DDH
-	JMP	LC782	;0C782H
-LC596:		;C596 
-	CALL	LC5DD	;0C5DDH
-	CALL	LC51A	;0C51AH
-	MVI	C,0AH
-	LXI	D,LC406	;0C406H
-	CALL	L0005	;5
-	CALL	LC529	;0C529H
-LC5A7:		;C5A7 
-	LXI	H,LC407	;0C407H
-	MOV	B,M
-LC5AB:		;C5AB 
-	INX	H
-	MOV	A,B
-	ORA	A
-	JZ	LC5BA	;0C5BAH
-	MOV	A,M
-	CALL	LC530	;0C530H
-	MOV	M,A
-	DCR	B
-	JMP	LC5AB	;0C5ABH
-LC5BA:		;C5BA 
-	MOV	M,A
-	LXI	H,LC408	;0C408H
-	SHLD	LC488	;0C488H
-	RET
-LC5C2:		;C5C2 
-	MVI	C,0BH
-	CALL	L0005	;5
-	ORA	A
-	RZ
-	MVI	C,1
-	CALL	L0005	;5
-	ORA	A
-	RET
-LC5D0:		;C5D0 
-	MVI	C,19H
-	JMP	L0005	;5
-LC5D5:		;C5D5 
-	LXI	D,L0080	;80H
-LC5D8:		;C5D8 
-	MVI	C,1AH
-	JMP	L0005	;5
-LC5DD:		;C5DD 
-	LXI	H,LCBAB	;0CBABH
-	MOV	A,M
-	ORA	A
-	RZ
-	MVI	M,0
-	XRA	A
-	CALL	LC4BD	;0C4BDH
-	LXI	D,LCBAC	;0CBACH
-	CALL	LC4EF	;0C4EFH
-	LDA	LCBEF	;0CBEFH
-	JMP	LC4BD	;0C4BDH
-LC5F5:		;C5F5 
-	LXI	D,LC728	;0C728H
-	LXI	H,LCC00	;0CC00H
-	MVI	B,6
-LC5FD:		;C5FD 
-	LDAX	D
-	CMP	M
-	JNZ	LC7CF	;0C7CFH
-	INX	D
-	INX	H
-	DCR	B
-	JNZ	LC5FD	;0C5FDH
-	RET
-LC609:		;C609 
-	CALL	LC498	;0C498H
-	LHLD	LC48A	;0C48AH
-LC60F:		;C60F 
-	MOV	A,M
-	CPI	' '	;20H
-	JZ	LC622	;0C622H
-	ORA	A
-	JZ	LC622	;0C622H
-	PUSH	H
-	CALL	LC48C	;0C48CH
-	POP	H
-	INX	H
-	JMP	LC60F	;0C60FH
-LC622:		;C622 
-	MVI	A,'?'	;3FH
-	CALL	LC48C	;0C48CH
-	CALL	LC498	;0C498H
-	CALL	LC5DD	;0C5DDH
-	JMP	LC782	;0C782H
-LC630:		;C630 
-	LDAX	D
-	ORA	A
-	RZ
-	CPI	' '	;20H
-	JC	LC609	;0C609H
-	RZ
-	CPI	'='	;3DH
-	RZ
-	CPI	5FH
-	RZ
-	CPI	'.'	;2EH
-	RZ
-	CPI	':'	;3AH
-	RZ
-	CPI	';'	;3BH
-	RZ
-	CPI	'<'	;3CH
-	RZ
-	CPI	'>'	;3EH
-	RZ
-	RET
-LC64F:		;C64F 
-	LDAX	D
-	ORA	A
-	RZ
-	CPI	' '	;20H
-	RNZ
-	INX	D
-	JMP	LC64F	;0C64FH
-LC659:		;C659 
-	ADD	L
-	MOV	L,A
-	RNC
-	INR	H
-	RET
-LC65E:		;C65E 
-	MVI	A,0
-LC660:		;C660 
-	LXI	H,LCBCD	;0CBCDH
-	CALL	LC659	;0C659H
-	PUSH	H
-	PUSH	H
-	XRA	A
-	STA	LCBF0	;0CBF0H
-	LHLD	LC488	;0C488H
-	XCHG
-	CALL	LC64F	;0C64FH
-	XCHG
-	SHLD	LC48A	;0C48AH
-	XCHG
-	POP	H
-	LDAX	D
-	ORA	A
-	JZ	LC689	;0C689H
-	SBI	'@'	;40H
-	MOV	B,A
-	INX	D
-	LDAX	D
-	CPI	':'	;3AH
-	JZ	LC690	;0C690H
-	DCX	D
-LC689:		;C689 
-	LDA	LCBEF	;0CBEFH
-	MOV	M,A
-	JMP	LC696	;0C696H
-LC690:		;C690 
-	MOV	A,B
-	STA	LCBF0	;0CBF0H
-	MOV	M,B
-	INX	D
-LC696:		;C696 
-	MVI	B,8
-LC698:		;C698 
-	CALL	LC630	;0C630H
-	JZ	LC6B9	;0C6B9H
-	INX	H
-	CPI	'*'	;2AH
-	JNZ	LC6A9	;0C6A9H
-	MVI	M,'?'	;3FH
-	JMP	LC6AB	;0C6ABH
-LC6A9:		;C6A9 
-	MOV	M,A
-	INX	D
-LC6AB:		;C6AB 
-	DCR	B
-	JNZ	LC698	;0C698H
-LC6AF:		;C6AF 
-	CALL	LC630	;0C630H
-	JZ	LC6C0	;0C6C0H
-	INX	D
-	JMP	LC6AF	;0C6AFH
-LC6B9:		;C6B9 
-	INX	H
-	MVI	M,' '	;20H
-	DCR	B
-	JNZ	LC6B9	;0C6B9H
-LC6C0:		;C6C0 
-	MVI	B,3
-	CPI	'.'	;2EH
-	JNZ	LC6E9	;0C6E9H
-	INX	D
-LC6C8:		;C6C8 
-	CALL	LC630	;0C630H
-	JZ	LC6E9	;0C6E9H
-	INX	H
-	CPI	'*'	;2AH
-	JNZ	LC6D9	;0C6D9H
-	MVI	M,'?'	;3FH
-	JMP	LC6DB	;0C6DBH
-LC6D9:		;C6D9 
-	MOV	M,A
-	INX	D
-LC6DB:		;C6DB 
-	DCR	B
-	JNZ	LC6C8	;0C6C8H
-LC6DF:		;C6DF 
-	CALL	LC630	;0C630H
-	JZ	LC6F0	;0C6F0H
-	INX	D
-	JMP	LC6DF	;0C6DFH
-LC6E9:		;C6E9 
-	INX	H
-	MVI	M,' '	;20H
-	DCR	B
-	JNZ	LC6E9	;0C6E9H
-LC6F0:		;C6F0 
-	MVI	B,3
-LC6F2:		;C6F2 
-	INX	H
-	MVI	M,0
-	DCR	B
-	JNZ	LC6F2	;0C6F2H
-	XCHG
-	SHLD	LC488	;0C488H
-	POP	H
-	LXI	B,L000B	;0BH
-LC701:		;C701 
-	INX	H
-	MOV	A,M
-	CPI	'?'	;3FH
-	JNZ	LC709	;0C709H
-	INR	B
-LC709:		;C709 
-	DCR	C
-	JNZ	LC701	;0C701H
-	MOV	A,B
-	ORA	A
-	RET
-LC710:		;C710 
-	DB	'DIR ERA TYPESAVEREN USER'
-LC728:		;C728
-	DB	0F6H,16H,0,0,0,6BH
-LC72E:		;C72E
-	LXI	H,LC710	;0C710H
-	MVI	C,0
-LC733:		;C733 
-	MOV	A,C
-	CPI	6
-	RNC
-	LXI	D,LCBCE	;0CBCEH
-	MVI	B,4
-LC73C:		;C73C 
-	LDAX	D
-	CMP	M
-	JNZ	LC74F	;0C74FH
-	INX	D
-	INX	H
-	DCR	B
-	JNZ	LC73C	;0C73CH
-	LDAX	D
-	CPI	' '	;20H
-	JNZ	LC754	;0C754H
-	MOV	A,C
-	RET
-LC74F:		;C74F 
-	INX	H
-	DCR	B
-	JNZ	LC74F	;0C74FH
-LC754:		;C754 
-	INR	C
-	JMP	LC733	;0C733H
-LC758:		;C758 
-	XRA	A
-	STA	LC407	;0C407H
-LC75C:		;C75C 
-	LXI	SP,LCBAB	;0CBABH
-	PUSH	B
-	MOV	A,C
-	RAR
-	RAR
-	RAR
-	RAR
-	ANI	0FH
-	MOV	E,A
-	CALL	LC515	;0C515H
-	CALL	LC4B8	;0C4B8H
-	STA	LCBAB	;0CBABH
-	POP	B
-	MOV	A,C
-	ANI	0FH
-	STA	LCBEF	;0CBEFH
-	CALL	LC4BD	;0C4BDH
-	LDA	LC407	;0C407H
-	ORA	A
-	JNZ	LC798	;0C798H
-LC782:		;C782 
-	LXI	SP,LCBAB	;0CBABH
-	CALL	LC498	;0C498H
-	CALL	LC5D0	;0C5D0H
-	ADI	'A'	;41H
-	CALL	LC48C	;0C48CH
-	MVI	A,'>'	;3EH
-	CALL	LC48C	;0C48CH
-	CALL	LC539	;0C539H
-LC798:		;C798 
-	LXI	D,L0080	;80H
-	CALL	LC5D8	;0C5D8H
-	CALL	LC5D0	;0C5D0H
-	STA	LCBEF	;0CBEFH
-	CALL	LC65E	;0C65EH
-	CNZ	LC609	;0C609H
-	LDA	LCBF0	;0CBF0H
-	ORA	A
-	JNZ	LCAA5	;0CAA5H
-	CALL	LC72E	;0C72EH
-	LXI	H,LC7C1	;0C7C1H
-	MOV	E,A
-	MVI	D,0
-	DAD	D
-	DAD	D
-	MOV	A,M
-	INX	H
-	MOV	H,M
-	MOV	L,A
-	PCHL
-LC7C1:		;C7C1 
-	DW	LC877	;0C877H
-	DW	LC91F	;0C91FH
-	DW	LC95D	;0C95DH
-	DW	LC9AD	;0C9ADH
-	DW	LCA10	;0CA10H
-	DW	LCA8E	;0CA8EH
-	DW	LCAA5	;0CAA5H
-LC7CF:		;C7CF 
-	LXI	H,L76F3	;76F3H
-	SHLD	LC400	;0C400H
-	LXI	H,LC400	;0C400H
-	PCHL
-LC7D9:		;C7D9 
-	LXI	B,LC7DF	;0C7DFH
-	JMP	LC4A7	;0C4A7H
-LC7DF:		;C7DF 
-	DB	'READ ERROR',0
-LC7EA:		;C7EA 
-	LXI	B,LC7F0	;0C7F0H
-	JMP	LC4A7	;0C4A7H
-LC7F0:		;C7F0 
-	DB	'NO FILE',0
-LC7F8:		;C7F8 
-	CALL	LC65E	;0C65EH
-	LDA	LCBF0	;0CBF0H
-	ORA	A
-	JNZ	LC609	;0C609H
-	LXI	H,LCBCE	;0CBCEH
-	LXI	B,L000B	;0BH
-LC808:		;C808 
-	MOV	A,M
-	CPI	' '	;20H
-	JZ	LC833	;0C833H
-	INX	H
-	SUI	'0'	;30H
-	CPI	0AH
-	JNC	LC609	;0C609H
-	MOV	D,A
-	MOV	A,B
-	ANI	0E0H
-	JNZ	LC609	;0C609H
-	MOV	A,B
-	RLC
-	RLC
-	RLC
-	ADD	B
-	JC	LC609	;0C609H
-	ADD	B
-	JC	LC609	;0C609H
-	ADD	D
-	JC	LC609	;0C609H
-	MOV	B,A
-	DCR	C
-	JNZ	LC808	;0C808H
-	RET
-LC833:		;C833 
-	MOV	A,M
-	CPI	' '	;20H
-	JNZ	LC609	;0C609H
-	INX	H
-	DCR	C
-	JNZ	LC833	;0C833H
-	MOV	A,B
-	RET
-LC840:		;C840 
-	MVI	B,3
-LC842:		;C842 
-	MOV	A,M
-	STAX	D
-	INX	H
-	INX	D
-	DCR	B
-	JNZ	LC842	;0C842H
-	RET
-LC84B:		;C84B 
-	LXI	H,L0080	;80H
-	ADD	C
-	CALL	LC659	;0C659H
-	MOV	A,M
-	RET
-LC854:		;C854 
-	XRA	A
-	STA	LCBCD	;0CBCDH
-	LDA	LCBF0	;0CBF0H
-	ORA	A
-	RZ
-	DCR	A
-	LXI	H,LCBEF	;0CBEFH
-	CMP	M
-	RZ
-	JMP	LC4BD	;0C4BDH
-LC866:		;C866 
-	LDA	LCBF0	;0CBF0H
-	ORA	A
-	RZ
-	DCR	A
-	LXI	H,LCBEF	;0CBEFH
-	CMP	M
-	RZ
-	LDA	LCBEF	;0CBEFH
-	JMP	LC4BD	;0C4BDH
-LC877:		;C877 
-	CALL	LC65E	;0C65EH
-	CALL	LC854	;0C854H
-	LXI	H,LCBCE	;0CBCEH
-	MOV	A,M
-	CPI	' '	;20H
-	JNZ	LC88F	;0C88FH
-	MVI	B,0BH
-LC888:		;C888 
-	MVI	M,'?'	;3FH
-	INX	H
-	DCR	B
-	JNZ	LC888	;0C888H
-LC88F:		;C88F 
-	MVI	E,0
-	PUSH	D
-	CALL	LC4E9	;0C4E9H
-	CZ	LC7EA	;0C7EAH
-LC898:		;C898 
-	JZ	LC91B	;0C91BH
-	LDA	LCBEE	;0CBEEH
-	RRC
-	RRC
-	RRC
-	ANI	60H
-	MOV	C,A
-	MVI	A,0AH
-	CALL	LC84B	;0C84BH
-	RAL
-	JC	LC90F	;0C90FH
-	POP	D
-	MOV	A,E
-	INR	E
-	PUSH	D
-	ANI	3
-	PUSH	PSW
-	JNZ	LC8CC	;0C8CCH
-	CALL	LC498	;0C498H
-	PUSH	B
-	CALL	LC5D0	;0C5D0H
-	POP	B
-	ADI	'A'	;41H
-	CALL	LC492	;0C492H
-	MVI	A,':'	;3AH
-	CALL	LC492	;0C492H
-	JMP	LC8D4	;0C8D4H
-LC8CC:		;C8CC 
-	CALL	LC4A2	;0C4A2H
-	MVI	A,':'	;3AH
-	CALL	LC492	;0C492H
-LC8D4:		;C8D4 
-	CALL	LC4A2	;0C4A2H
-	MVI	B,1
-LC8D9:		;C8D9 
-	MOV	A,B
-	CALL	LC84B	;0C84BH
-	ANI	7FH
-	CPI	' '	;20H
-	JNZ	LC8F9	;0C8F9H
-	POP	PSW
-	PUSH	PSW
-	CPI	3
-	JNZ	LC8F7	;0C8F7H
-	MVI	A,9
-	CALL	LC84B	;0C84BH
-	ANI	7FH
-	CPI	' '	;20H
-	JZ	LC90E	;0C90EH
-LC8F7:		;C8F7 
-	MVI	A,' '	;20H
-LC8F9:		;C8F9 
-	CALL	LC492	;0C492H
-	INR	B
-	MOV	A,B
-	CPI	0CH
-	JNC	LC90E	;0C90EH
-	CPI	9
-	JNZ	LC8D9	;0C8D9H
-	CALL	LC4A2	;0C4A2H
-	JMP	LC8D9	;0C8D9H
-LC90E:		;C90E 
-	POP	PSW
-LC90F:		;C90F 
-	CALL	LC5C2	;0C5C2H
-	JNZ	LC91B	;0C91BH
-	CALL	LC4E4	;0C4E4H
-	JMP	LC898	;0C898H
-LC91B:		;C91B 
-	POP	D
-	JMP	LCB86	;0CB86H
-LC91F:		;C91F 
-	CALL	LC65E	;0C65EH
-	CPI	0BH
-	JNZ	LC942	;0C942H
-	LXI	B,LC952	;0C952H
-	CALL	LC4A7	;0C4A7H
-	CALL	LC539	;0C539H
-	LXI	H,LC407	;0C407H
-	DCR	M
-	JNZ	LC782	;0C782H
-	INX	H
-	MOV	A,M
-	CPI	'Y'	;59H
-	JNZ	LC782	;0C782H
-	INX	H
-	SHLD	LC488	;0C488H
-LC942:		;C942 
-	CALL	LC854	;0C854H
-	LXI	D,LCBCD	;0CBCDH
-	CALL	LC4EF	;0C4EFH
-	INR	A
-	CZ	LC7EA	;0C7EAH
-	JMP	LCB86	;0CB86H
-LC952:		;C952 
-	DB	'ALL (Y/N)?',0
-LC95D:		;C95D 
-	CALL	LC65E	;0C65EH
-	JNZ	LC609	;0C609H
-	CALL	LC854	;0C854H
-	CALL	LC4D0	;0C4D0H
-	JZ	LC9A7	;0C9A7H
-	CALL	LC498	;0C498H
-	LXI	H,LCBF1	;0CBF1H
-	MVI	M,0FFH
-LC974:		;C974 
-	LXI	H,LCBF1	;0CBF1H
-	MOV	A,M
-	CPI	80H
-	JC	LC987	;0C987H
-	PUSH	H
-	CALL	LC4FE	;0C4FEH
-	POP	H
-	JNZ	LC9A0	;0C9A0H
-	XRA	A
-	MOV	M,A
-LC987:		;C987 
-	INR	M
-	LXI	H,L0080	;80H
-	CALL	LC659	;0C659H
-	MOV	A,M
-	CPI	1AH
-	JZ	LCB86	;0CB86H
-	CALL	LC48C	;0C48CH
-	CALL	LC5C2	;0C5C2H
-	JNZ	LCB86	;0CB86H
-	JMP	LC974	;0C974H
-LC9A0:		;C9A0 
-	DCR	A
-	JZ	LCB86	;0CB86H
-	CALL	LC7D9	;0C7D9H
-LC9A7:		;C9A7 
-	CALL	LC866	;0C866H
-	JMP	LC609	;0C609H
-LC9AD:		;C9AD 
-	CALL	LC7F8	;0C7F8H
-	PUSH	PSW
-	CALL	LC65E	;0C65EH
-	JNZ	LC609	;0C609H
-	CALL	LC854	;0C854H
-	LXI	D,LCBCD	;0CBCDH
-	PUSH	D
-	CALL	LC4EF	;0C4EFH
-	POP	D
-	CALL	LC509	;0C509H
-	JZ	LC9FB	;0C9FBH
-	XRA	A
-	STA	LCBED	;0CBEDH
-	POP	PSW
-	MOV	L,A
-	MVI	H,0
-	DAD	H
-	LXI	D,L0100	;0100H
-LC9D4:		;C9D4 
-	MOV	A,H
-	ORA	L
-	JZ	LC9F1	;0C9F1H
-	DCX	H
-	PUSH	H
-	LXI	H,L0080	;80H
-	DAD	D
-	PUSH	H
-	CALL	LC5D8	;0C5D8H
-	LXI	D,LCBCD	;0CBCDH
-	CALL	LC504	;0C504H
-	POP	D
-	POP	H
-	JNZ	LC9FB	;0C9FBH
-	JMP	LC9D4	;0C9D4H
-LC9F1:		;C9F1 
-	LXI	D,LCBCD	;0CBCDH
-	CALL	LC4DA	;0C4DAH
-	INR	A
-	JNZ	LCA01	;0CA01H
-LC9FB:		;C9FB 
-	LXI	B,LCA07	;0CA07H
-	CALL	LC4A7	;0C4A7H
-LCA01:		;CA01 
-	CALL	LC5D5	;0C5D5H
-	JMP	LCB86	;0CB86H
-LCA07:		;CA07 
-	DB	'NO SPACE',0
-LCA10:		;CA10 
-	CALL	LC65E	;0C65EH
-	JNZ	LC609	;0C609H
-	LDA	LCBF0	;0CBF0H
-	PUSH	PSW
-	CALL	LC854	;0C854H
-	CALL	LC4E9	;0C4E9H
-	JNZ	LCA79	;0CA79H
-	LXI	H,LCBCD	;0CBCDH
-	LXI	D,LCBDD	;0CBDDH
-	MVI	B,10H
-	CALL	LC842	;0C842H
-	LHLD	LC488	;0C488H
-	XCHG
-	CALL	LC64F	;0C64FH
-	CPI	'='	;3DH
-	JZ	LCA3F	;0CA3FH
-	CPI	5FH
-	JNZ	LCA73	;0CA73H
-LCA3F:		;CA3F 
-	XCHG
-	INX	H
-	SHLD	LC488	;0C488H
-	CALL	LC65E	;0C65EH
-	JNZ	LCA73	;0CA73H
-	POP	PSW
-	MOV	B,A
-	LXI	H,LCBF0	;0CBF0H
-	MOV	A,M
-	ORA	A
-	JZ	LCA59	;0CA59H
-	CMP	B
-	MOV	M,B
-	JNZ	LCA73	;0CA73H
-LCA59:		;CA59 
-	MOV	M,B
-	XRA	A
-	STA	LCBCD	;0CBCDH
-	CALL	LC4E9	;0C4E9H
-	JZ	LCA6D	;0CA6DH
-	LXI	D,LCBCD	;0CBCDH
-	CALL	LC50E	;0C50EH
-	JMP	LCB86	;0CB86H
-LCA6D:		;CA6D 
-	CALL	LC7EA	;0C7EAH
-	JMP	LCB86	;0CB86H
-LCA73:		;CA73 
-	CALL	LC866	;0C866H
-	JMP	LC609	;0C609H
-LCA79:		;CA79 
-	LXI	B,LCA82	;0CA82H
-	CALL	LC4A7	;0C4A7H
-	JMP	LCB86	;0CB86H
-LCA82:		;CA82 
-	DB	'FILE EXISTS',0
-LCA8E:		;CA8E 
-	CALL	LC7F8	;0C7F8H
-	CPI	10H
-	JNC	LC609	;0C609H
-	MOV	E,A
-	LDA	LCBCE	;0CBCEH
-	CPI	' '	;20H
-	JZ	LC609	;0C609H
-	CALL	LC515	;0C515H
-	JMP	LCB89	;0CB89H
-LCAA5:		;CAA5 
-	CALL	LC5F5	;0C5F5H
-	LDA	LCBCE	;0CBCEH
-	CPI	' '	;20H
-	JNZ	LCAC4	;0CAC4H
-	LDA	LCBF0	;0CBF0H
-	ORA	A
-	JZ	LCB89	;0CB89H
-	DCR	A
-	STA	LCBEF	;0CBEFH
-	CALL	LC529	;0C529H
-	CALL	LC4BD	;0C4BDH
-	JMP	LCB89	;0CB89H
-LCAC4:		;CAC4 
-	LXI	D,LCBD6	;0CBD6H
-	LDAX	D
-	CPI	' '	;20H
-	JNZ	LC609	;0C609H
-	PUSH	D
-	CALL	LC854	;0C854H
-	POP	D
-	LXI	H,LCB83	;0CB83H
-	CALL	LC840	;0C840H
-	CALL	LC4D0	;0C4D0H
-	JZ	B_BASE+33H
-	LXI	H,L0100	;0100H
-LCAE1:		;CAE1 
-	PUSH	H
-	XCHG
-	CALL	LC5D8	;0C5D8H
-	LXI	D,LCBCD	;0CBCDH
-	CALL	LC4F9	;0C4F9H
-	JNZ	LCB01	;0CB01H
-	POP	H
-	LXI	D,L0080	;80H
-	DAD	D
-	LXI	D,LC400	;0C400H
-	MOV	A,L
-	SUB	E
-	MOV	A,H
-	SBB	D
-	JNC	LCB71	;0CB71H
-	JMP	LCAE1	;0CAE1H
-LCB01:		;CB01 
-	POP	H
-	DCR	A
-	JNZ	LCB71	;0CB71H
-	CALL	LC866	;0C866H
-	CALL	LC65E	;0C65EH
-	LXI	H,LCBF0	;0CBF0H
-	PUSH	H
-	MOV	A,M
-	STA	LCBCD	;0CBCDH
-	MVI	A,10H
-	CALL	LC660	;0C660H
-	POP	H
-	MOV	A,M
-	STA	LCBDD	;0CBDDH
-	XRA	A
-	STA	LCBED	;0CBEDH
-	LXI	D,L005C	;5CH
-	LXI	H,LCBCD	;0CBCDH
-	MVI	B,'!'	;21H
-	CALL	LC842	;0C842H
-	LXI	H,LC408	;0C408H
-LCB30:		;CB30 
-	MOV	A,M
-	ORA	A
-	JZ	LCB3E	;0CB3EH
-	CPI	' '	;20H
-	JZ	LCB3E	;0CB3EH
-	INX	H
-	JMP	LCB30	;0CB30H
-LCB3E:		;CB3E 
-	MVI	B,0
-	LXI	D,L0081	;81H
-LCB43:		;CB43 
-	MOV	A,M
-	STAX	D
-	ORA	A
-	JZ	LCB4F	;0CB4FH
-	INR	B
-	INX	H
-	INX	D
-	JMP	LCB43	;0CB43H
-LCB4F:		;CB4F 
-	MOV	A,B
-	STA	L0080	;80H
-	CALL	LC498	;0C498H
-	CALL	LC5D5	;0C5D5H
-	CALL	LC51A	;0C51AH
-	CALL	L0100	;0100H
-	LXI	SP,LCBAB	;0CBABH
-	CALL	LC529	;0C529H
-	CALL	LC4BD	;0C4BDH
-	JMP	LC782	;0C782H
-	CALL	LC866	;0C866H
-	JMP	LC609	;0C609H
-LCB71:		;CB71 
-	LXI	B,LCB7A	;0CB7AH
-	CALL	LC4A7	;0C4A7H
-	JMP	LCB86	;0CB86H
-LCB7A:		;CB7A 
-	DB	'BAD LOAD',0
-LCB83:		;CB83 
-	DB	'COM'
-LCB86:		;CB86 
-	CALL	LC866	;0C866H
-LCB89:		;CB89 
-	CALL	LC65E	;0C65EH
-	LDA	LCBCE	;0CBCEH
-	SUI	' '	;20H
-	LXI	H,LCBF0	;0CBF0H
-	ORA	M
-	JNZ	LC609	;0C609H
-	JMP	LC782	;0C782H
-	DS	0010H
-LCBAB:		;CBAB 
-	DB	0
-LCBAC:		;CBAC 
-	DB	0,'$$$     SUB',0,0
-LCBBA:		;CBBA 
-	DB	0
-LCBBB:		;CBBB 
-	DB	0,0,0,0,0,0,0,0,0,0,0,0,0
-	DB	0,0,0,0
-LCBCC:		;CBCC 
-	DB	0
-LCBCD:		;CBCD 
-	DB	0
-LCBCE:		;CBCE 
-	DB	'        '
-LCBD6:		;CBD6 
-	DB	'   ',0,0,0,'.'
-LCBDD:		;CBDD 
-	DB	0,'           ',0,0,0,0
-LCBED:		;CBED 
-	DB	0
-LCBEE:		;CBEE 
-	INX	B
-LCBEF:		;CBEF 
-	DB	0
-LCBF0:		;CBF0 
-	DB	0
-LCBF1:		;CBF1 
-	DB	0,0,0,0,0,0,0,0,0,0,0,0,0
-	DB	0,0
-LCC00:		;CC00 
-	DB	0F6H,16H,0,0,0,6BH
+	jmp	ccpstart	;start ccp with possible initial command
+	jmp	ccpclear	;clear the command buffer
+maxlen:	db	127	;max buffer length
+comlen:	db	0	;command length (filled in by dos)
+;	(command executed initially if comlen non zero)
+combuf:
+	db	"        "	;8 character fill
+	db	"        "	;8 character fill
+	db	"COPYRIGHT (C) 1979, DIGITAL RESEARCH  "; 38
+	ds	128-($-combuf)
+;	total buffer length is 128 characters
+comaddr:dw	combuf	;address of next to char to scan
+staddr:	ds	2	;starting address of current fillfcb request
 
+diska	equ	0004h	;disk address for current disk
+bdos	equ	0005h	;primary bdos entry point
+buff	equ	0080h	;default buffer
+fcb	equ	005ch	;default file control block
+
+rcharf	equ	1	;read character function
+pcharf	equ	2	;print character function
+pbuff	equ	9	;print buffer function
+rbuff	equ	10	;read buffer function
+breakf	equ	11	;break key function
+liftf	equ	12	;lift head function (no operation)
+initf	equ	13	;initialize bdos function
+self	equ	14	;select disk function
+openf	equ	15	;open file function
+closef	equ	16	;close file function
+searf	equ	17	;search for file function
+searnf	equ	18	;search for next file function
+delf	equ	19	;delete file function
+dreadf	equ	20	;disk read function
+dwritf	equ	21	;disk write function
+makef	equ	22	;file make function
+renf	equ	23	;rename file function
+logf	equ	24	;return login vector
+cself	equ	25	;return currently selected drive number
+dmaf	equ	26	;set dma address
+userf	equ	32	;set user number
+
+;	special fcb flags
+rofile	equ	9	;read only file
+sysfile	equ	10	;system file flag
+
+;	special characters
+cr	equ	13	;carriage return
+lf	equ	10	;line feed
+la	equ	5fh	;left arrow
+eofile	equ	1ah	;end of file
+
+;	utility procedures
+printchar:
+	mov	e,a
+	mvi	c,pcharf
+	jmp	bdos
+
+printbc:
+	;print character, but save b,c registers
+	push	b
+	call	printchar
+	pop	b
+	ret
+
+ccp_crlf:
+	mvi	a,cr
+	call	printbc
+	mvi	a,lf
+	jmp	printbc
+
+blank:
+	mvi	a,' '
+	jmp	printbc
+
+ccp_print:	; print string starting at b,c until next 00 entry
+	push	b		;now print the string
+	call	ccp_crlf
+	pop	h
+prin0:	mov	a,m		;stop on 00
+	ora	a
+	rz
+	inx	h		;ready for next
+	push	h
+	call	printchar	;character printed
+	pop	h
+	jmp	prin0		;for another character
+
+ccp_initialize:
+	mvi	c,initf
+	jmp	bdos
+
+ccp_select:
+	mov	e,a
+	mvi	c,self
+	jmp	bdos
+
+bdos_inr:
+	call	bdos
+	sta	ccp_dcnt
+	inr	a
+	ret
+
+ccp_open:	;open the file given by d,e
+	mvi	c,openf
+	jmp	bdos_inr
+
+openc:	;open comfcb
+	xra	a		;clear next record to read
+	sta	comrec
+	lxi	d,comfcb
+	jmp	ccp_open
+
+ccp_close:	;close the file given by d,e
+	mvi	c,closef
+	jmp	bdos_inr
+
+ccp_search:	;search for the file given by d,e
+	mvi	c,searf
+	jmp	bdos_inr
+
+ccp_searchn:
+	;search for the next occurrence of the file given by d,e
+	mvi	c,searnf
+	jmp	bdos_inr
+
+searchcom:
+	;search for comfcb file
+	lxi	d,comfcb
+	jmp	ccp_search
+
+ccp_delete:	;delete the file given by d,e
+	mvi	c,delf
+	jmp	bdos
+
+bdos_cond:
+	call	bdos
+	ora	a
+	ret
+
+ccp_diskread:
+	;read the next record from the file given by d,e
+	mvi	c,dreadf
+	jmp	bdos_cond
+
+diskreadc:
+	;read the comfcb file
+	lxi	d,comfcb
+	jmp	ccp_diskread
+
+ccp_diskwrite:
+	;write the next record to the file given by d,e
+	mvi	c,dwritf
+	jmp	bdos_cond
+
+ccp_make:	;create the file given by d,e
+	mvi	c,makef
+	jmp	bdos_inr
+
+renam:	;rename the file given by d,e
+	mvi	c,renf
+	jmp	bdos
+
+getuser:
+	;return current user code in a
+	mvi	e,0ffh		;drop through to setuser
+
+setuser:
+        mvi	c,userf		;sets user number
+	jmp	bdos
+
+saveuser:
+	;save user#/disk# before possible ^c or transient
+	call	getuser		;code to a
+	add	a		;rot left
+	add	a
+	add	a
+	add	a
+	lxi	h,cdisk		;4b=user, 4b=disk
+	ora	m
+	sta	diska		;stored away in memory for later
+	ret
+
+setdiska:
+	lda	cdisk		;user/disk
+	sta	diska
+	ret
+
+translate:
+	;translate character in register A to upper case
+	cpi	61h		;return if below lower case a
+	rc
+	cpi	7bh		;return if above lower case z
+	rnc
+	ani	5fh		;translated to upper case
+	ret
+
+readcom:
+	;read the next command into the command buffer
+	;check for submit file
+	lda	submit
+	ora	a
+	jz	nosub
+	;scanning a submit file
+	;change drives to open and read the file
+	lda	cdisk
+	ora	a
+	mvi	a,0
+	cnz	ccp_select
+	;have to open again in case xsub present
+	lxi	d,subfcb	;skip if no sub
+	call	ccp_open
+	jz	nosub
+	lda	subrc		;read last record(s) first
+	dcr	a
+	sta	subcr		;current record to read
+	lxi	d,subfcb	;end of file if last record
+	call	ccp_diskread
+	jnz	nosub
+	;disk read is ok, transfer to combuf
+	lxi	d,comlen
+	lxi	h,buff
+	mvi	b,128
+	call	move0
+	;line is transferred, close the file with a
+	;deleted record
+	lxi	h,submod	;clear fwflag
+	mvi	m,0
+	inx	h		;one less record
+	dcr	m
+	lxi	d,subfcb
+	call	ccp_close
+	jz	nosub
+	;close went ok, return to original drive
+	lda	cdisk
+	ora	a
+	cnz	ccp_select
+	;print to the 00
+	lxi	h,combuf
+	call	prin0
+	call	break_key
+	jz	noread
+	call	del_sub		;break key depressed
+	jmp	ccp
+
+nosub:	;no submit file
+	call	del_sub
+	;translate to upper case, store zero at end
+	call	saveuser	;user # save in case control c
+	mvi	c,rbuff
+	lxi	d,maxlen
+	call	bdos
+	call	setdiska	;no control c, so restore diska
+noread:	;enter here from submit file
+	;set the last character to zero for later scans
+	lxi	h,comlen	;length is in b
+	mov	b,m
+readcom0:
+	inx	h		;end of scan?
+	mov	a,b
+	ora	a
+	jz	readcom1	;get character and translate
+	mov	a,m
+	call	translate
+	mov	m,a
+	dcr	b
+	jmp	readcom0
+
+readcom1: ;end of scan, h,l address end of command
+	mov	m,a		;store a zero
+	lxi	h,combuf	;ready to scan to zero
+	shld	comaddr
+	ret
+
+break_key:
+	;check for a character ready at the console
+	mvi	c,breakf
+	call	bdos
+	ora	a
+	rz
+	mvi	c,rcharf	;character cleared
+	call	bdos
+	ora	a
+	ret
+
+cselect:
+	;get the currently selected drive number to reg-A
+	mvi	c,cself
+	jmp	bdos
+
+setdmabuff:
+	;set default buffer dma address
+	lxi	d,buff		;(drop through)
+
+ccp_setdma:
+	;set dma address to d,e
+	mvi	c,dmaf
+	jmp	bdos
+
+del_sub:
+	;delete the submit file, and set submit flag to false
+	lxi	h,submit	;return if no sub file
+	mov	a,m
+	ora	a
+	rz
+	mvi	m,0		;submit flag is set to false
+	xra	a		;on drive a to erase file
+	call	ccp_select
+	lxi	d,subfcb
+	call	ccp_delete
+	lda	cdisk		;back to original drive
+	jmp	ccp_select
+
+	ifndef	noserial
+serialize:
+	;check serialization
+	lxi	d,serial	;check six bytes
+	lxi	h,bdosl
+	mvi	b,6
+ser0:	ldax	d
+	cmp	m
+	jnz	badserial
+	inx	d
+	inx	h
+	dcr	b
+	jnz	ser0
+	ret			;serial number is ok
+	endif
+
+comerr:
+	;error in command string starting at position
+	;'staddr' and ending with first delimiter
+	call	ccp_crlf		;space to next line
+	lhld	staddr		;h,l address first to print
+comerr0: ;print characters until blank or zero
+	mov	a,m		; not blank
+	cpi	' '
+	jz	comerr1
+	ora	a		; not zero, so print it
+	jz	comerr1
+	push	h
+	call	printchar
+	pop	h
+	inx	h
+	jmp	comerr0;	for another character
+comerr1: ;print question mark,and delete sub file
+	mvi	a,'?'
+	call	printchar
+	call	ccp_crlf
+	call	del_sub
+	jmp	ccp ;restart with next command
+
+; fcb scan and fill subroutine (entry is at fillfcb below)
+	;fill the comfcb, indexed by A (0 or 16)
+	;subroutines
+delim:	;look for a delimiter
+	ldax	d		;not the last element
+	ora	a
+	rz
+	cpi	' '		;non graphic
+	jc	comerr
+	rz			;treat blank as delimiter
+	cpi	'='
+	rz
+	cpi	la		;left arrow
+	rz
+	cpi	'.'
+	rz
+	cpi	':'
+	rz
+	cpi	';'
+	rz
+	cpi	'<'
+	rz
+	cpi	'>'
+	rz
+	ret			;delimiter not found
+
+deblank: ;deblank the input line
+	ldax	d		;treat end of line as blank
+	ora	a
+	rz
+	cpi	' '
+	rnz
+	inx	d
+	jmp	deblank
+
+ccp_addh: ;add a to h,l
+	add	l
+	mov	l,a
+	rnc
+	inr	h
+	ret
+
+fillfcb0:
+	;equivalent to fillfcb(0)
+	mvi	a,0
+
+fillfcb:
+	lxi	h,comfcb	;fcb rescanned at end
+	call	ccp_addh
+	push	h
+	push	h
+	xra	a		;clear selected disk (in case A:...)
+	sta	sdisk
+	lhld	comaddr		;command address in d,e
+	xchg
+	call	deblank		;to first non-blank character
+	xchg			;in case of errors
+	shld	staddr
+	xchg			;d,e has command, h,l has fcb address
+	pop	h
+	;look for preceding file name A: B: ...
+	ldax	d		;use current disk if empty command
+	ora	a
+	jz	setcur0
+	sbi	'A'-1		;disk name held in b if : follows
+	mov	b,a
+	inx	d		;set disk name if :
+	ldax	d
+	cpi	':'
+	jz	setdsk
+
+setcur: ;set current disk
+	dcx	d		;back to first character of command
+setcur0:
+	lda	cdisk
+	mov	m,a
+	jmp	setname
+
+setdsk: ;set disk to name in register b
+	mov	a,b		;mark as disk selected
+	sta	sdisk
+	mov	m,b		;past the :
+	inx	d
+
+setname: ;set the file name field
+	mvi	b,8		;file name length (max)
+setnam0:
+	call	delim		;not a delimiter
+	jz	padname
+	inx	h		;must be ?'s
+	cpi	'*'
+	jnz	setnam1
+	mvi	m,'?'		;to dec count
+	jmp	setnam2
+
+setnam1:
+	mov	m,a		;store character to fcb
+	inx	d
+setnam2:
+	dcr	b		;count down length
+	jnz	setnam0
+
+	;end of name, truncate remainder
+trname:	call	delim		;set type field if delimiter
+	jz	setty
+	inx	d
+	jmp	trname
+
+padname:
+	inx	h
+	mvi	m,' '
+	dcr	b
+	jnz	padname
+
+setty: ;set the type field
+	mvi	b,3		;skip the type field if no .
+	cpi	'.'
+	jnz	padty
+	inx	d		;past the ., to the file type field
+setty0: ;set the field from the command buffer
+	call	delim
+	jz	padty
+	inx	h
+	cpi	'*'
+	jnz	setty1
+	mvi	m,'?'		;since * specified
+	jmp	setty2
+
+setty1: ;not a *, so copy to type field
+	mov	m,a
+	inx	d
+setty2: ;decrement count and go again
+	dcr	b
+	jnz	setty0
+
+	;end of type field, truncate
+trtyp: ;truncate type field
+	call	delim
+	jz	efill
+	inx	d
+	jmp	trtyp
+
+padty:	;pad the type field with blanks
+	inx	h
+	mvi	m,' '
+	dcr	b
+	jnz	padty
+
+efill: ;end of the filename/filetype fill, save command address
+	;fill the remaining fields for the fcb
+	mvi	b,3
+efill0:	inx h
+	mvi	m,0
+	dcr	b
+	jnz	efill0
+	xchg			;set new starting point
+	shld	comaddr
+
+	;recover the start address of the fcb and count ?'s
+	pop	h		;b=0, c=8+3
+	lxi	b,11
+scnq:	inx	h
+	mov	a,m
+	cpi	'?'
+	jnz	scnq0
+	;? found, count it in b
+	inr b
+scnq0:	dcr	c
+	jnz	scnq
+
+	;number of ?'s in c, move to a and return with flags set
+	mov	a,b
+	ora	a
+	ret
+
+intvec:
+	;intrinsic function names (all are four characters)
+	db	"DIR "
+	db	"ERA "
+	db	"TYPE"
+	db	"SAVE"
+	db	"REN "
+        db      "USER"
+intlen	equ ($-intvec)/4 ;intrinsic function length
+	
+; serial number (details not documented in original DRI source file)
+serial:	db	0		; OEM number, low byte
+	db	0		; CP/M version, 16h = 2.2
+	db	0		; OEM number, high byte
+	db	0,0,0		; serial number, big-endian
+
+
+intrinsic:
+	;look for intrinsic functions (comfcb has been filled)
+	lxi	h,intvec	;c counts intrinsics as scanned
+	mvi	c,0
+intrin0:
+	mov	a,c		;done with scan?
+	cpi	intlen
+	rnc
+	;no, more to scan
+	lxi	d,comfcb+1	;beginning of name
+	mvi	b,4		;length of match is in b
+intrin1:
+	ldax	d		;match?
+	cmp	m
+	jnz	intrin2		;skip if no match
+	inx	d
+	inx	h
+	dcr	b
+	jnz	intrin1		;loop while matching
+
+	;complete match on name, check for blank in fcb
+	ldax	d		;otherwise matched
+	cpi	' '
+	jnz	intrin3
+	mov	a,c		;with intrinsic number in a
+	ret
+
+intrin2: ;mismatch, move to end of intrinsic
+	inx	h
+	dcr	b
+	jnz	intrin2
+
+intrin3: ;try next intrinsic
+	inr	c		;to next intrinsic number
+	jmp	intrin0		;for another round
+
+ccpclear:
+	;clear the command buffer
+	xra	a
+	sta	comlen
+	;drop through to start ccp
+ccpstart:
+	;enter here from boot loader
+	lxi	sp,stack	;save initial disk number
+	push	b
+        ;(high order 4bits=user code, low 4bits=disk#)
+	mov	a,c		;user code
+	rar
+	rar
+	rar
+	rar
+	ani	0fh
+	
+	mov	e,a		;user code selected
+	call	setuser
+	;initialize for this user, get $ flag
+        call	ccp_initialize	;0ffh in accum if $ file present
+        sta	submit		;submit flag set if $ file present
+        pop	b		;recall user code and disk number
+	mov	a,c		;disk number in accumulator
+	ani	0fh
+        sta	cdisk		;clears user code nibble
+	call	ccp_select		;proper disk is selected, now check sub files
+	;check for initial command
+	lda	comlen		;assume typed already
+	ora	a
+	jnz	ccp0
+
+ccp:
+	;enter here on each command or error condition
+	lxi	sp,stack
+	call	ccp_crlf		;print d> prompt, where d is disk name
+	call	cselect		;get current disk number
+	adi	'A'
+	call	printchar
+	mvi	a,'>'
+	call	printchar
+	call	readcom		;command buffer filled
+ccp0:	;(enter here from initialization with command full)
+	lxi	d,buff		;default dma address at buff
+	call	ccp_setdma
+	call	cselect		;current disk number saved
+	sta	cdisk
+	call	fillfcb0	;command fcb filled
+	cnz	comerr		;the name cannot be an ambiguous reference
+	lda	sdisk
+	ora	a
+	jnz	userfunc
+	;check for an intrinsic function
+	call	intrinsic
+	lxi	h,jmptab	;index is in the accumulator
+	mov	e,a		;index in d,e
+	mvi	d,0
+	dad	d
+	dad	d
+	mov	a,m
+	inx	h
+	mov	h,m
+	mov	l,a
+	pchl
+	;pc changes to the proper intrinsic or user function
+
+jmptab:
+	dw	direct	;directory search
+	dw	erase	;file erase
+	dw	type	;type file
+	dw	save	;save memory image
+	dw	ccp_rename	;file rename
+	dw	user	;user number
+	dw	userfunc;user-defined function
+
+	ifndef	noserial
+badserial:
+	LXI	H,76F3H	;'DI HLT' instructions.	
+	;typo "lxi h,di or (hlt shl 8)" here originally,
+	;corrected by comparing to disassembly of Clark Calkins.
+	shld	ccploc
+	lxi	h,ccploc
+	pchl
+	endif
+
+;utility subroutines for intrinsic handlers
+readerr:
+	;print the read error message
+	lxi	b,rdmsg
+	jmp	ccp_print
+rdmsg: db "READ ERROR",0
+
+nofile:
+	;print no file message
+	lxi	b,nofmsg
+	jmp	ccp_print
+nofmsg: db "NO FILE",0
+
+getnumber: ;read a number from the command line
+	call	fillfcb0	;should be number
+	lda	sdisk		;cannot be prefixed
+	ora	a
+	jnz	comerr
+	;convert the byte value in comfcb to binary
+	lxi	h,comfcb+1	;(b=0, c=11)
+	lxi	b,11
+	;value accumulated in b, c counts name length to zero
+conv0:	mov	a,m
+	cpi ' '
+	jz	conv1
+	;more to scan, convert char to binary and add
+	inx	h		;valid?
+	sui	'0'
+	cpi	10
+	jnc	comerr
+	mov	d,a		;save value
+	mov	a,b		;mult by 10
+	ani	11100000b
+	jnz	comerr
+	mov	a,b		;recover value
+	rlc			;*8
+	rlc
+	rlc
+	add	b
+	jc	comerr
+	add	b		;*8+*2 = *10
+	jc	comerr
+	add	d		;+digit
+	jc	comerr
+	mov	b,a		;for another digit
+	dcr	c
+	jnz	conv0
+	ret
+conv1:	;end of digits, check for all blanks
+	mov	a,m		;blanks?
+	cpi	' '
+	jnz	comerr
+	inx	h
+	dcr	c
+	jnz	conv1
+	mov	a,b		;recover value
+	ret
+
+movename:
+	;move 3 characters from h,l to d,e addresses
+	mvi	b,3
+move0:	mov	a,m
+	stax	d
+	inx	h
+	inx	d
+	dcr	b
+	jnz	move0
+	ret
+
+addhcf:	;buff + a + c to h,l followed by fetch
+	lxi	h,buff
+	add	c
+	call	ccp_addh
+	mov	a,m
+	ret
+
+setdisk:
+	;change disks for this command, if requested
+	xra	a		;clear disk name from fcb
+	sta	comfcb
+	lda	sdisk		;no action if not specified
+	ora	a
+	rz
+	dcr	a		;already selected
+	lxi	h,cdisk
+	cmp	m
+	rz
+	jmp	ccp_select
+
+resetdisk:
+	;return to original disk after command
+	lda	sdisk		;no action if not selected
+	ora	a
+	rz
+	dcr	a		;same disk
+	lxi	h,cdisk
+	cmp	m
+	rz
+	lda	cdisk
+	jmp	ccp_select
+
+;individual intrinsics follow
+direct:
+	;directory search
+	call	fillfcb0	;comfcb gets file name
+	call	setdisk		;change disk drives if requested
+	lxi	h,comfcb+1	;may be empty request
+	mov	a,m
+	cpi	' '		;skip fill of ??? if not blank
+	jnz	dir1
+	;set comfcb to all ??? for current disk
+	mvi	b,11		;length of fill ????????.???
+dir0:	mvi	m,'?'
+	inx	h
+	dcr	b
+	jnz	dir0
+	;not a blank request, must be in comfcb
+dir1:	mvi	e,0		;E counts directory entries
+	push	d
+	call	searchcom	;first one has been found
+	cz	nofile		;not found message
+dir2:	jz	endir
+	;found, but may be system file
+	lda	ccp_dcnt		;get the location of the element
+	rrc
+	rrc
+	rrc
+	ani	1100000b
+	mov	c,a
+	;c contains base index into buff for dir entry
+	mvi	a,sysfile	;value to A
+	call	addhcf
+	ral			;skip if system file
+	jc	dir6
+	;c holds index into buffer
+	;another fcb found, new line?
+	pop	d
+	mov	a,e
+	inr	e
+	push	d
+	;e=0,1,2,3,...new line if mod 4 = 0
+	ani	11b		;and save the test
+	push	psw
+	jnz	dirhdr0		;header on current line
+	call	ccp_crlf
+	push	b
+	call	cselect
+	pop	b
+	;current disk in A
+	adi	'A'
+	call	printbc
+	mvi	a,':'
+	call	printbc
+	jmp	dirhdr1		;skip current line hdr
+dirhdr0:
+	call	blank		;after last one
+	mvi	a,':'
+	call	printbc
+dirhdr1:
+	call	blank
+	;compute position of name in buffer
+	mvi	b,1		;start with first character of name
+dir3:	mov	a,b		;buff+a+c fetched
+	call	addhcf
+	ani	7fh		;mask flags
+	;may delete trailing blanks
+	cpi	' '		;check for blank type
+	jnz	dir4
+	pop	psw		;may be 3rd item
+	push	psw
+	cpi	3		;place blank at end if not
+	jnz	dirb
+	mvi	a,9		;first char of type
+	call	addhcf
+	ani	7fh
+	cpi	' '
+	jz	dir5
+	;not a blank in the file type field
+dirb:	mvi	a,' '		;restore trailing filename chr
+dir4:
+	call	printbc		;char printed
+	inr	b
+	mov	a,b
+	cpi	12
+	jnc	dir5
+	;check for break between names
+	cpi	9		;for another char
+	jnz	dir3
+	;print a blank between names
+	call	blank
+	jmp	dir3
+
+dir5:	;end of current entry
+	pop	psw		;discard the directory counter (mod 4)
+dir6:	call	break_key	;check for interrupt at keyboard
+	jnz	endir		;abort directory search
+	call	ccp_searchn		;for another entry
+	jmp	dir2
+endir:	;end of directory scan
+	pop	d		;discard directory counter
+	jmp	retcom
+
+
+erase:
+	call	fillfcb0	;cannot be all ???'s
+	cpi	11
+	jnz	erasefile
+	;erasing all of the disk
+	lxi	b,ermsg
+	call	ccp_print
+	call	readcom
+	lxi	h,comlen	;bad input
+	dcr	m
+	jnz	ccp
+	inx	h
+	mov	a,m
+	cpi	'Y'
+	jnz	ccp
+	;ok, erase the entire diskette
+	inx	h		;otherwise error at retcom
+	shld	comaddr
+erasefile:
+	call	setdisk
+	lxi	d,comfcb
+	call	ccp_delete
+	inr	a		;255 returned if not found
+	cz	nofile		;no file message if so
+	jmp	retcom
+
+ermsg:	db	"ALL (Y/N)?",0
+
+type:
+	call	fillfcb0	;don't allow ?'s in file name
+	jnz	comerr
+	call	setdisk		;open the file
+	call	openc
+	jz	typerr		;zero flag indicates not found
+	;file opened, read 'til eof
+	call	ccp_crlf		;read first buffer
+	lxi	h,bptr
+	mvi	m,255
+type0:	;loop on bptr
+	lxi	h,bptr		;end buffer
+	mov	a,m
+	cpi	128
+	jc	type1		;carry if 0,1,...,127
+	push	h
+	;read another buffer full
+	call	diskreadc
+	pop	h		;recover address of bptr
+	jnz	typeof		;hard end of file
+	xra	a		;bptr = 0
+	mov	m,a
+type1:	;read character at bptr and print
+	inr	m		;bptr = bptr + 1
+	lxi	h,buff		;h,l addresses char
+	call	ccp_addh
+	mov	a,m
+	cpi	eofile
+	jz	retcom
+	call	printchar
+	call	break_key	;abort if break
+	jnz	retcom
+	jmp	type0 ;for another character
+
+typeof:	;end of file, check for errors
+	dcr	a
+	jz	retcom
+	call	readerr
+typerr:	call	resetdisk
+	jmp	comerr
+
+save:
+	call	getnumber	; value to register a
+	push	psw		;save it for later
+
+	;should be followed by a file to save the memory image
+	call	fillfcb0
+	jnz	comerr		;cannot be ambiguous
+	call	setdisk		;may be a disk change
+	lxi	d,comfcb	;existing file removed
+	push	d
+	call	ccp_delete
+	pop	d
+	call	ccp_make		;create a new file on disk
+	jz	saverr		;no directory space
+	xra	a		;clear next record field
+	sta	comrec
+	pop	psw		;#pages to write is in a, change to #sectors
+	mov	l,a
+	mvi	h,0
+	dad	h 
+	lxi	d,tran		;h,l is sector count, d,e is load address
+save0:	;check for sector count zero
+	mov	a,h		;may be completed
+	ora	l
+	jz	save1
+	dcx	h		;sector count = sector count - 1
+	push	h		;save it for next time around
+	lxi	h,128		;next dma address saved
+	dad	d
+	push	h
+	call	ccp_setdma		;current dma address set
+	lxi	d,comfcb
+	call	ccp_diskwrite
+	pop	d		;dma address, sector count
+	pop	h
+	jnz	saverr		;may be disk full case
+	jmp	save0		;for another sector
+
+save1:	;end of dump, close the file
+	lxi	d,comfcb
+	call	ccp_close
+	inr	a		;255 becomes 00 if error
+	jnz	retsave		;for another command
+saverr:	;must be full or read only disk
+	lxi	b,fullmsg
+	call	ccp_print
+retsave:
+	;reset dma buffer
+	call	setdmabuff
+	jmp	retcom
+fullmsg:
+	db "NO SPACE",0
+
+
+ccp_rename:
+	;rename a file on a specific disk
+	call	fillfcb0	;must be unambiguous
+	jnz	comerr
+	lda	sdisk		;save for later compare
+	push	psw
+	call	setdisk		;disk selected
+	call	searchcom	;is new name already there?
+	jnz	renerr3
+	;file doesn't exist, move to second half of fcb
+	lxi	h,comfcb
+	lxi	d,comfcb+16
+	mvi	b,16
+	call	move0
+	;check for = or left arrow
+	lhld	comaddr
+	xchg
+	call	deblank
+	cpi	'='		;ok if =
+	jz	ren1
+	cpi	la
+	jnz	renerr2
+ren1:	xchg			;past delimiter
+	inx	h
+	shld	comaddr
+	;proper delimiter found
+	call	fillfcb0
+	jnz	renerr2
+	;check for drive conflict
+	pop	psw		;previous drive number
+	mov	b,a
+	lxi	h,sdisk
+	mov	a,m
+	ora	a
+	jz	ren2
+	;drive name was specified.  same one?
+	cmp	b
+	mov	m,b
+	jnz	renerr2
+ren2:	mov	m,b		;store the name in case drives switched
+	xra	a		;is old file there?
+	sta	comfcb
+	call	searchcom
+	jz	renerr1
+
+	;everything is ok, rename the file
+	lxi	d,comfcb
+	call	renam
+	jmp	retcom
+
+renerr1:; no file on disk
+	call	nofile
+	jmp	retcom
+renerr2:; ambigous reference/name conflict
+	call	resetdisk
+	jmp	comerr
+renerr3:; file already exists
+	lxi	b,renmsg
+	call	ccp_print
+	jmp	retcom
+renmsg:	db "FILE EXISTS",0
+
+user:
+	;set user number
+	call	getnumber	; leaves the value in the accumulator
+	cpi	16		; must be between 0 and 15
+	jnc	comerr
+	mov	e,a		;save for setuser call
+	lda	comfcb+1
+	cpi	' '
+	jz	comerr
+	call	setuser		;new user number set
+	jmp	endcom
+
+userfunc:
+	ifndef	noserialize
+	call	serialize	;check serialization
+	endif
+	;load user function and set up for execution
+	lda	comfcb+1
+	cpi	' '
+	jnz	user0
+	;no file name, but may be disk switch
+	lda	sdisk		;no disk name if 0
+	ora	a
+	jz	endcom
+	dcr	a		;set user/disk
+	sta	cdisk
+	call	setdiska
+	call	ccp_select
+	jmp	endcom
+user0:	;file name is present
+	lxi	d,comfcb+9	;type ' '
+	ldax	d
+	cpi	' '
+	jnz	comerr
+	push	d		;.com
+	call	setdisk
+	pop	d
+	lxi	h,comtype
+	call	movename	;file type is set to .com
+	call	openc
+	jz	userer
+	;file opened properly, read it into memory
+	lxi	h,tran		;transient program base
+load0:	push	h		;save dma address
+	xchg
+	call	ccp_setdma
+	lxi	d,comfcb
+	call	ccp_diskread
+	jnz	load1
+	;sector loaded, set new dma address and compare
+	pop	h
+	lxi	d,128
+	dad	d
+	lxi	d,tranm		;has the load overflowed?
+	mov	a,l
+	sub	e
+	mov	a,h
+	sbb	d
+	jnc	loaderr
+	jmp	load0		;for another sector
+
+load1:	pop	h		;end file is 1
+	dcr	a
+	jnz	loaderr
+	call	resetdisk	;back to original disk
+	call	fillfcb0
+	lxi	h,sdisk
+	push	h
+	mov	a,m		;drive number set
+	sta	comfcb
+	mvi	a,16		;move entire fcb to memory
+	call	fillfcb
+	pop	h
+	mov	a,m
+	sta	comfcb+16
+	xra	a		;record number set to zero
+	sta	comrec
+	lxi	d,fcb
+	lxi	h,comfcb
+	mvi	b,33
+	call	move0
+	;move command line to buff
+	lxi	h,combuf
+bmove0:	mov	a,m
+	ora	a
+	jz	bmove1
+	cpi	' '
+	jz	bmove1
+	inx	h		;for another scan
+	jmp	bmove0
+	;first blank position found
+bmove1:	mvi	b,0		;ready for the move
+	lxi	d,buff+1
+bmove2:	mov	a,m
+	stax	d
+	ora	a
+	jz	bmove3
+	;more to move
+	inr	b
+	inx	h
+	inx	d
+	jmp	bmove2
+bmove3:	;b has character count
+	mov	a,b
+	sta	buff
+	call	ccp_crlf
+	;now go to the loaded program
+	call	setdmabuff	;default dma
+	call	saveuser	;user code saved
+	;low memory diska contains user code
+	call	tran		;gone to the loaded program
+	lxi	sp,stack	;may come back here
+	call	setdiska
+	call	ccp_select
+	jmp	ccp
+
+userer:	;arrive here on command error
+	call	resetdisk
+	jmp	comerr
+
+loaderr:;cannot load the program
+	lxi	b,loadmsg
+	call	ccp_print
+	jmp	retcom
+loadmsg:
+	db "BAD LOAD",0
+comtype:
+	db "COM"		;for com files
+
+
+retcom:	;reset disk before end of command check
+	call	resetdisk
+
+endcom:	;end of intrinsic command
+	call	fillfcb0	;to check for garbage at end of line
+	lda	comfcb+1
+	sui	' '
+	lxi	h,sdisk
+	ora	m
+	;0 in accumulator if no disk selected, and blank fcb
+	jnz	comerr
+	jmp	ccp
+
+
+
+;	data areas
+	ds	16	;8 level stack
+stack:
+
+;	'submit' file control block
+submit:	db	0	;00 if no submit file, ff if submitting
+subfcb:	db	0,"$$$     "	;file name is $$$
+	db	"SUB",0,0	;file type is sub
+submod:	db	0	;module number
+subrc:	ds	1	;record count filed
+	ds	16	;disk map
+subcr:	ds	1	;current record to read
+
+;	command file control block
+comfcb:	ds	32	;fields filled in later
+comrec:	ds	1	;current record to read/write
+ccp_dcnt:	ds	1	;disk directory count (used for error codes)
+cdisk:	ds	1	;current disk
+sdisk:	ds	1	;selected disk for current operation
+			;none=0, a=1, b=2 ...
+bptr:	ds	1	;buffer pointer
+	;end	ccploc
 C_SIZE	equ	$-C_BASE
-;	END

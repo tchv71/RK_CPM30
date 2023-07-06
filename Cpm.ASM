@@ -23,10 +23,10 @@ ENDIF
 
 include CCP.ASM
 include BDOS.ASM
-IFDEF	USE_PRG_DC
-	.dephase
-	.phase 0E000h
-ENDIF
+;IFDEF	USE_PRG_DC
+;	.dephase
+;	.phase 0E000h
+;ENDIF
 include B1MAIN.ASM
 include B2DISK.ASM
 ;include FDCNTR.ASM
