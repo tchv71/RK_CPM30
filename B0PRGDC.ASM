@@ -1,5 +1,13 @@
 	LXI	SP,100h
 
+	MVI	A,0C4h
+	OUT	-1 ; Turn on external device programming mode (for in/out commands)
+	LXI	H,BEGPRO+1
+	LXI	B,0FE00h
+	MVI	A,15
+	CALL	READR
+	CALL	LOOP01 ; Turn on working mode
+
 	MVI	A,80H ; Start page
 	LXI	D,MAP
 	CALL	PROG_DC
@@ -18,14 +26,75 @@ CP001:
 	ORA	C
 	JNZ	CP001
 
+IFDEF	EXTERNAL_PORTS
+	MVI	A,0CAh
+	OUT	-1 ; Turn on external device programming mode (for in/out commands)
+
+	LXI	H,BEGPRO+1
+	LXI	B,400h + PPI
+	XRA	A
+	CALL	READR
+
+	LXI	B,400h + PPI2
+	INR	A
+	CALL	READR
+
+	INR	A
+	OUT	DISP
+	OUT	DISP+1
+
+	LXI	B,1000h + DMA	; DMA
+	MVI	A,9
+	CALL	READR
+
+	MVI	A,6	; PSG
+	LXI	B,400h + PSG1
+	CALL	READR
+
+	MVI	A,11
+	OUT	PALM_CNTRL
+
+	MVI	A,8Ah
+	OUT	-1
+ELSE
+	MVI	A,0CAh
+	OUT	-1
+
+	LXI	H,BEGPRO+1
+	LXI	B,400h + PPI
+	XRA	A
+	CALL	READR
+
+	LXI	B,400h + PPI2
+	INR	A
+	CALL	READR
+
+	INR	A
+	OUT	DISP
+	OUT	DISP+1
+
+	LXI	B,1000h + DMA	; DMA
+	MVI	A,9
+	CALL	READR
+
+	MVI	A,11
+	OUT	0c0h;PALM_CNTRL
+	MVI	A,8Ah
+	OUT	-1
+ENDIF
+
 	MVI	A,80H
 	@out	PALM_CNTRL
 	LXI	H,FONT
 	MVI	D,0
 	CALL	CmdOpenDelete
+	ORA	A
+	JNZ	ERR_READ
+
 	LXI	D,0D800H
 	LXI	H,2048
 	CALL	CmdRead
+	ORA	A
 	JNZ	ERR_READ
 	MVI	A,0C0h
 	@out	PALM_CNTRL
@@ -44,6 +113,8 @@ ERR_READ:
 	OUT	-1
 	JMP	0E000H
 
+READR:
+	MOV	M,C
 BEGPRO:
 	OUT 0
 	INR M
@@ -53,7 +124,7 @@ BEGPRO:
 
 PROG_DC:
 	PUSH	PSW
-	MVI A,0A4H;  Включить режим репрограммирования
+	MVI A,0AAH;  Включить режим репрограммирования
 	OUT -1;     внутренних устройств
 	POP	PSW
 	LXI H,BEGPRO+1 ; Записать в hl адрес операнда
@@ -71,7 +142,7 @@ LOOP:
 	CALL	BEGPRO
 	JMP	LOOP
 LOOP01:
-	MVI A,84H   ; Включить рабочий режим
+	MVI A,8AH   ; Включить рабочий режим
 	OUT -1
 	MVI A,80H   ; Записать в системный регистр-начальные
 	OUT -1      ; значения: турборежим выключен, нулевая
@@ -87,13 +158,20 @@ MAP:
 	DB	16,10
 	DB	8,10,8,13
 	DB	18h,10
+IFDEF	EXTERNAL_PORTS
+	DB	7,10
+	DB	1,8Ah
+ELSE
 	DB	1,6 ;  8253 first
 	DB	1,0 ;  8255 first
 	DB	1,1 ;  8255 second
 	DB	1,2 ;  8275 display adapter
 	DB	1,4 ;  8257 DMA chip
 	DB	1,11;  Palmira control byte
+	DB	1,10;
+	DB	1,80h+10
 ;	DB	2,10;  Rest 2 - RAM
+ENDIF
 	DB	0
 
 MAP2:	DB	8,10,0

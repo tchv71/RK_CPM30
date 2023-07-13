@@ -6,16 +6,36 @@
 ?Ctrl	equ	40h
 ?Shift	equ	20h
 
+EXTERNAL_PORTS	equ	1
+
 ; IN and OUT MACRO comands
 @in	MACRO	addr
+IF ((addr) LT 256)
+	in	addr
+ELSE
 	lda	addr
+ENDIF
 	ENDM
 
 @out	MACRO	addr
+IF ((addr) LT 256)
+	out	addr
+ELSE
 	sta	addr
+ENDIF
 	ENDM
 
 IFDEF	USE_PRG_DC
+IFDEF EXTERNAL_PORTS
+;************ Controller's mapping ****************
+PPI	equ	000h;  8255 first		  *
+PPI2	equ	010h;  8255 second	   	  *
+DISP	equ	020h;  8275 display adapter	  *
+DMA	equ	030h;  8257 DMA chip	    	  *
+PSG1	equ	040h;  8253 first	          *
+PALM_CNTRL equ	0c0h;  Palmira control byte       *
+;**************************************************
+ELSE
 ;************ Controller's mapping ****************
 PSG1	equ	0F800h;  8253 first	          *
 PPI	equ	0F900h;  8255 first		  *
@@ -24,6 +44,7 @@ DISP	equ	0FB00h;  8275 display adapter	  *
 DMA	equ	0FC00h;  8257 DMA chip	    	  *
 PALM_CNTRL equ	0FD00h;  Palmira control byte     *
 ;**************************************************
+ENDIF
 ELSE
 ;************ Controller's mapping ****************
 ;FDC	equ	0F700h;				  *
