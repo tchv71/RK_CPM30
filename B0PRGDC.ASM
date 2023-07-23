@@ -1,5 +1,9 @@
 	LXI	SP,100h
 
+	LXI	H,CCP_START + (CPM_BIN - C_BASE)
+	MVI	B,63
+	CALL	strcpyN
+
 	IN	-1
 	MVI	A,0C0h
 	OUT	-1 ; Turn on external device programming mode (for in/out commands)
@@ -128,6 +132,18 @@ LOOP01:
 	OUT	-1      ; значения: турборежим выключен, нулевая
                     ; страница дополнительного озу
 	RET
+
+strcpyN:
+     LDAX D
+     INX  D
+     MOV  M, A
+     INX  H
+     ORA  A
+     RZ
+     DCR  B
+     JNZ  strcpyN
+     MVI  M, 0 ; Терминатор
+     RET
 
 
 FONT:	DB	'CPM/8X16ENG.FNT',0
