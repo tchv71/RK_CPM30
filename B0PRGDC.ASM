@@ -4,7 +4,7 @@
 	MVI	A,0C0h
 	OUT	-1 ; Turn on external device programming mode (for in/out commands)
 	LXI	H,BEGPRO+1
-	LXI	B,0FE00h
+	LXI	B,00000h
 	MVI	A,15
 	CALL	READR
 	CALL	LOOP01 ; Turn on working mode
@@ -58,31 +58,6 @@ IFDEF	EXTERNAL_PORTS
 
 	IN	-1
 	MVI	A,80h
-	OUT	-1
-ELSE
-	MVI	A,0CAh
-	OUT	-1
-
-	LXI	H,BEGPRO+1
-	LXI	B,400h + PPI
-	XRA	A
-	CALL	READR
-
-	LXI	B,400h + PPI2
-	INR	A
-	CALL	READR
-
-	INR	A
-	OUT	DISP
-	OUT	DISP+1
-
-	LXI	B,1000h + DMA	; DMA
-	MVI	A,9
-	CALL	READR
-
-	MVI	A,11
-	OUT	0c0h;PALM_CNTRL
-	MVI	A,8Ah
 	OUT	-1
 ENDIF
 
@@ -173,8 +148,8 @@ ELSE
 	DB	1,2 ;  8275 display adapter
 	DB	1,4 ;  8257 DMA chip
 	DB	1,11;  Palmira control byte
-	DB	1,10;
-	DB	1,80h+10
+	DB	2,10;
+	;DB	1,80h+10
 ;	DB	2,10;  Rest 2 - RAM
 ENDIF
 	DB	0
