@@ -1,6 +1,7 @@
 	LXI	SP,100h
 
-	MVI	A,0C4h
+	IN	-1
+	MVI	A,0C0h
 	OUT	-1 ; Turn on external device programming mode (for in/out commands)
 	LXI	H,BEGPRO+1
 	LXI	B,0FE00h
@@ -27,7 +28,8 @@ CP001:
 	JNZ	CP001
 
 IFDEF	EXTERNAL_PORTS
-	MVI	A,0CAh
+	IN	-1
+	MVI	A,0C0h
 	OUT	-1 ; Turn on external device programming mode (for in/out commands)
 
 	LXI	H,BEGPRO+1
@@ -54,7 +56,8 @@ IFDEF	EXTERNAL_PORTS
 	MVI	A,11
 	OUT	PALM_CNTRL
 
-	MVI	A,8Ah
+	IN	-1
+	MVI	A,80h
 	OUT	-1
 ELSE
 	MVI	A,0CAh
@@ -105,10 +108,12 @@ ENDIF
 	JMP	BOOT
 
 ERR_READ:
+	IN	-1
 	MVI	A,0A0h
 	OUT	-1
 	MVI	A,4
 	OUT	0E0H
+	IN	-1
 	MVI	A,80H
 	OUT	-1
 	JMP	0E000H
@@ -124,8 +129,9 @@ BEGPRO:
 
 PROG_DC:
 	PUSH	PSW
-	MVI A,0AAH;  Включить режим репрограммирования
-	OUT -1;     внутренних устройств
+	IN	-1
+	MVI	A,0A0H;  Включить режим репрограммирования
+	OUT	-1;     внутренних устройств
 	POP	PSW
 	LXI H,BEGPRO+1 ; Записать в hl адрес операнда
 		     ; команды out для обеспечения инкремента
@@ -142,10 +148,9 @@ LOOP:
 	CALL	BEGPRO
 	JMP	LOOP
 LOOP01:
-	MVI A,8AH   ; Включить рабочий режим
-	OUT -1
-	MVI A,80H   ; Записать в системный регистр-начальные
-	OUT -1      ; значения: турборежим выключен, нулевая
+	IN	-1
+	MVI	A,80H   ; Записать в системный регистр-начальные
+	OUT	-1      ; значения: турборежим выключен, нулевая
                     ; страница дополнительного озу
 	RET
 

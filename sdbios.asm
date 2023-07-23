@@ -146,51 +146,51 @@ BiosEntry:
 
 JmpTbl:
      dw 0;CmdExec           ; 0 HL-имя файла, DE-командная строка  / A-код ошибки
-     dw CmdFind           ; 1 HL-имя файла, DE-максимум файлов для загрузки, BC-адрес / HL-сколько загрузили, A-код ошибки
+     dw 0;CmdFind           ; 1 HL-имя файла, DE-максимум файлов для загрузки, BC-адрес / HL-сколько загрузили, A-код ошибки
      dw CmdOpenDelete     ; 2 D-режим, HL-имя файла / A-код ошибки
      dw CmdSeekGetSize    ; 3 B-режим, DE:HL-позиция / A-код ошибки, DE:HL-позиция
      dw CmdRead           ; 4 HL-размер, DE-адрес / HL-сколько загрузили, A-код ошибки
      dw CmdWrite          ; 5 HL-размер, DE-адрес / A-код ошибки
-     dw CmdMove           ; 6 HL-из, DE-в / A-код ошибки
+     dw 0;CmdMove           ; 6 HL-из, DE-в / A-код ошибки
 
 ;----------------------------------------------------------------------------
 ; HL-путь, DE-максимум файлов для загрузки, BC-адрес / HL-сколько загрузили, A-код ошибки
 
-CmdFind:
-     ; Код команды
-     MVI	A, 3
-     CALL	StartCommand
-
-     ; Путь
-     CALL	SendString
-
-     ; Максимум файлов
-     XCHG
-     CALL	SendWord
-
-     ; Переключаемся в режим приема
-     CALL	SwitchRecv
-
-     ; Счетчик
-     LXI	H, 0
-
-CmdFindLoop:
-     ; Ждем пока МК прочитает
-     CALL	WaitForReady
-     CPI	ERR_OK
-     JZ		Ret0
-     CPI	ERR_OK_ENTRY
-     JNZ	EndCommand
-
-     ; Прием блока данных
-     LXI	D, 20	; Длина блока
-     CALL	RecvBlock
-
-     ; Увеличиваем счетчик файлов
-     INX	H
-
-     ; Цикл
-     JMP	CmdFindLoop
+;CmdFind:
+;     ; Код команды
+;     MVI	A, 3
+;     CALL	StartCommand
+;
+;     ; Путь
+;     CALL	SendString
+;
+;     ; Максимум файлов
+;     XCHG
+;     CALL	SendWord
+;
+;     ; Переключаемся в режим приема
+;     CALL	SwitchRecv
+;
+;     ; Счетчик
+;     LXI	H, 0
+;
+;CmdFindLoop:
+;     ; Ждем пока МК прочитает
+;     CALL	WaitForReady
+;     CPI	ERR_OK
+;     JZ		Ret0
+;     CPI	ERR_OK_ENTRY
+;     JNZ	EndCommand
+;
+;     ; Прием блока данных
+;     LXI	D, 20	; Длина блока
+;     CALL	RecvBlock
+;
+;     ; Увеличиваем счетчик файлов
+;     INX	H
+;
+;     ; Цикл
+;     JMP	CmdFindLoop
 
 ;----------------------------------------------------------------------------
 ; D-режим, HL-имя файла / A-код ошибки
@@ -283,7 +283,7 @@ CmdWriteFile2:
      CALL	SwitchRecvAndWait
      CPI  	ERR_OK
      JZ  	Ret0
-     CPI  	ERR_OK_WRITE
+     SUI  	ERR_OK_WRITE
      JNZ	EndCommand
 
      ; Размер блока, который может принять МК в DE
@@ -307,32 +307,32 @@ CmdWriteFile1:
 ;----------------------------------------------------------------------------
 ; HL-из, DE-в / A-код ошибки
 
-CmdMove:     
-     ; Код команды
-     MVI	A, 8
-     CALL	StartCommand
+;CmdMove:     
+;     ; Код команды
+;     MVI	A, 8
+;     CALL	StartCommand
+;
+;     ; Имя файла
+;     CALL	SendString
+;
+;     ; Ждем пока МК сообразит
+;     CALL	SwitchRecvAndWait
+;     CPI	ERR_OK_WRITE
+;     JNZ	EndCommand
+;
+;     ; Переключаемся в режим передачи
+;     CALL	SwitchSend
+;
+;     ; Имя файла
+;     XCHG
+;     CALL	SendString
 
-     ; Имя файла
-     CALL	SendString
-
-     ; Ждем пока МК сообразит
-     CALL	SwitchRecvAndWait
-     CPI	ERR_OK_WRITE
-     JNZ	EndCommand
-
-     ; Переключаемся в режим передачи
-     CALL	SwitchSend
-
-     ; Имя файла
-     XCHG
-     CALL	SendString
-
-WaitEnd:
-     ; Ждем пока МК сообразит
-     CALL	SwitchRecvAndWait
-     CPI	ERR_OK
-     JZ		Ret0
-     JMP	EndCommand
+;WaitEnd:
+;     ; Ждем пока МК сообразит
+;     CALL	SwitchRecvAndWait
+;     CPI	ERR_OK
+;     JZ		Ret0
+;     JMP	EndCommand
 
 ;----------------------------------------------------------------------------
 ; HL-имя файла, DE-командная строка / A-код ошибки
