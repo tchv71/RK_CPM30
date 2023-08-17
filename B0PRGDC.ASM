@@ -80,9 +80,11 @@ IFNDEF	RK60K
 	@out	PALM_CNTRL
 ENDIF
 
+IFDEF	USE_PRG_DC
 	MVI	A,0D8h
 	LXI	D,MAP2
 	CALL	PROG_DC
+ENDIF
 	LXI	H,CCP_START
 	LXI	D, C_BASE
 	LXI	B, (B_BASE-C_BASE)
@@ -107,6 +109,7 @@ ERR_READ:
 	@SYSREG	80h
 	JMP	0E000H
 
+IFDEF	USE_PRG_DC
 READR:
 	MOV	M,C
 BEGPRO:
@@ -139,6 +142,7 @@ LOOP01:
 			; значения: турборежим выключен, нулевая
 			; страница дополнительного озу
 	RET
+ENDIF
 
 strcpyN:
 	LDAX	D
@@ -155,6 +159,7 @@ strcpyN:
 
 FONT:	DB	'CPM/8X16ENG.FNT',0
 
+IFDEF	USE_PRG_DC
 MAP:
 	DB	58h,10
 	DB	8,13
@@ -173,5 +178,5 @@ ENDIF
 	DB	0
 
 MAP2:	DB	8,10,0
-
+ENDIF
 CCP_START:

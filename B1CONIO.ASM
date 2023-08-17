@@ -490,6 +490,7 @@ GOTOXY:	MVI	A,80H	; Cursor move command
 	MOV	B,L
 	LDA	XSIZE
 	SUB	B
+	ADI	HorizShift
 	@out	DISP
 
 	MOV	B,H
