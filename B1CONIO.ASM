@@ -53,7 +53,9 @@ ChangeViewMode:
 	pop	h
 	sta	ViewMode
 	;sta	SCR_BUFF
+IFNDEF	RK60K
 	@out	PALM_CNTRL
+ENDIF
 	jmp	CONIN
 
 ViewPtr: dw	ViewTbl
@@ -133,7 +135,9 @@ CONOUT:	PUSH	H
 	PUSH	PSW
 	LDA	ViewMode
 	;STA	SCR_BUFF
+IFNDEF	RK60K
 	@out	PALM_CNTRL
+ENDIF
 	MOV	A,C
 	ANI	7FH
 	LHLD	CHPNT

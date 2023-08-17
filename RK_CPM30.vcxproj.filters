@@ -81,10 +81,16 @@
     <None Include="B0PRGDC.ASM">
       <Filter>Исходные файлы</Filter>
     </None>
-    <None Include="RkConfigPalmiraCPM.mac" />
-    <None Include="RkConfigPalmira.mac" />
-    <None Include="RkConfig60k.mac" />
     <None Include="RkConfig.mac">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="RkConfig60k.mac">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="RkConfigPalmira.mac">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="RkConfigPalmiraCPM.mac">
       <Filter>Исходные файлы</Filter>
     </None>
   </ItemGroup>
