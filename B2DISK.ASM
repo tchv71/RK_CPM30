@@ -157,7 +157,7 @@ DskInit:
 	XRA	A
 	STA	OLDDSK
 	STA	OLDF40
-        call	RamD_I
+        ;call	RamD_I
 	call	SD_I
         jmp	FlpD_I
 
@@ -324,9 +324,9 @@ RD_REC:
 	CPI	SD
 	JMP	SD_R
 	;JZ	SD_R
-	CPI	RAMDISK
-	JZ	RamD_R
-	jmp	FlpD_R
+	;CPI	RAMDISK
+	;JZ	RamD_R
+	;jmp	FlpD_R
 
 ;**********************************************
 ; WRITE CURRENT RECORD TO DISK
@@ -337,9 +337,9 @@ WR_REC::
 	CPI	SD
 	JMP	SD_W
 	;JZ	SD_W
-	CPI	RAMDISK
-	JZ	RamD_W	; Check for ramdisk call.
-	jmp	FlpD_W
+	;CPI	RAMDISK
+	;JZ	RamD_W	; Check for ramdisk call.
+	;jmp	FlpD_W
 
 
 OLDDSK::	DB	0	; LAST CP/M DISK
