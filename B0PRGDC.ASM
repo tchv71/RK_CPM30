@@ -1,3 +1,9 @@
+@SYSREG	MACRO	VAL
+	IN	-1
+	MVI	A,VAL
+	OUT	-1
+	ENDM
+
 	LXI	SP,100h
 
 IFNDEF	USE_PRG_DC
@@ -6,9 +12,7 @@ IFNDEF	USE_PRG_DC
 	CALL	strcpyN
 ENDIF
 
-	IN	-1
-	MVI	A,0C0h
-	OUT	-1 ; Turn on external device programming mode (for in/out commands)
+	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)
 	LXI	H,BEGPRO+1
 	LXI	B,00000h
 	MVI	A,15
@@ -24,10 +28,9 @@ ENDIF
 	LXI	D, B_BASE
 	LXI	B, (BIOS_END-B_BASE)
 	CALL	CP001
+
 IFDEF	EXTERNAL_PORTS
-	IN	-1
-	MVI	A,0C0h
-	OUT	-1 ; Turn on external device programming mode (for in/out commands)
+	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)
 
 	LXI	H,BEGPRO+1
 	LXI	B,400h + PPI
@@ -53,9 +56,7 @@ IFDEF	EXTERNAL_PORTS
 	MVI	A,11
 	OUT	PALM_CNTRL
 
-	IN	-1
-	MVI	A,80h
-	OUT	-1
+	@SYSREG	80h
 ENDIF
 
 	MVI	A,80H
@@ -96,14 +97,10 @@ CP001:
 	JMP	CP001
 
 ERR_READ:
-	IN	-1
-	MVI	A,0A0h
-	OUT	-1
+	@SYSREG	0A0h
 	MVI	A,4
 	OUT	0E0H
-	IN	-1
-	MVI	A,80H
-	OUT	-1
+	@SYSREG	80h
 	JMP	0E000H
 
 READR:
@@ -117,9 +114,7 @@ BEGPRO:
 
 PROG_DC:
 	PUSH	PSW
-	IN	-1
-	MVI	A,0A0H;  Включить режим репрограммирования
-	OUT	-1;     внутренних устройств
+	@SYSREG	0A0H;  Включить режим репрограммирования  внутренних устройств
 	POP	PSW
 	LXI H,BEGPRO+1 ; Записать в hl адрес операнда
 		     ; команды out для обеспечения инкремента
@@ -136,36 +131,32 @@ LOOP:
 	CALL	BEGPRO
 	JMP	LOOP
 LOOP01:
-	IN	-1
-	MVI	A,80H   ; Записать в системный регистр-начальные
-	OUT	-1      ; значения: турборежим выключен, нулевая
-                    ; страница дополнительного озу
+	@SYSREG	80H	; Записать в системный регистр-начальные
+			; значения: турборежим выключен, нулевая
+			; страница дополнительного озу
 	RET
 
 strcpyN:
-     LDAX D
-     INX  D
-     MOV  M, A
-     INX  H
-     ORA  A
-     RZ
-     DCR  B
-     JNZ  strcpyN
-     MVI  M, 0 ; Терминатор
-     RET
+	LDAX	D
+	INX	D
+	MOV	M, A
+	INX	H
+	ORA	A
+	RZ
+	DCR	B
+	JNZ	strcpyN
+	MVI	M, 0 ; Терминатор
+	RET
 
 
 FONT:	DB	'CPM/8X16ENG.FNT',0
 
 MAP:
-	DB	40h,10
-	;DB	2,2,2,0,2,1,2,7,2,8,2,10,2,6,2,11
-	DB	16,10
-	DB	8,10,8,13
+	DB	58h,10
+	DB	8,13
 	DB	18h,10
 IFDEF	EXTERNAL_PORTS
-	DB	7,10
-	DB	1,8Ah
+	DB	8,10
 ELSE
 	DB	1,6 ;  8253 first
 	DB	1,0 ;  8255 first
@@ -174,8 +165,6 @@ ELSE
 	DB	1,4 ;  8257 DMA chip
 	DB	1,11;  Palmira control byte
 	DB	2,10;
-	;DB	1,80h+10
-;	DB	2,10;  Rest 2 - RAM
 ENDIF
 	DB	0
 
