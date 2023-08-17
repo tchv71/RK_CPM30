@@ -189,14 +189,14 @@
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RK60K|Win32'">
-    <NMakeBuildCommandLine>make CPM/CPM60K.rk</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>make CPM/CPM_P.rkl</NMakeBuildCommandLine>
     <NMakeOutput>CPM.BIN</NMakeOutput>
     <NMakeCleanCommandLine>make clean</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPM|Win32'">
     <NMakeBuildCommandLine>make CPM/CPM.rkl</NMakeBuildCommandLine>
-    <NMakeOutput>CPM6.BIN</NMakeOutput>
+    <NMakeOutput>CPM.BIN</NMakeOutput>
     <NMakeCleanCommandLine>make clean</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
