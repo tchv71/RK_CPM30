@@ -12,6 +12,7 @@ IFNDEF	USE_PRG_DC
 	CALL	strcpyN
 ENDIF
 
+IFDEF	USE_PRG_DC
 	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)
 	LXI	H,BEGPRO+1
 	LXI	B,00000h
@@ -22,13 +23,14 @@ ENDIF
 	MVI	A,80H ; Start page
 	LXI	D,MAP
 	CALL	PROG_DC
-
+ENDIF
 
 	LXI	H,CCP_START + (B_BASE-C_BASE)
 	LXI	D, B_BASE
 	LXI	B, (BIOS_END-B_BASE)
 	CALL	CP001
 
+IFDEF	USE_PRG_DC
 IFDEF	EXTERNAL_PORTS
 	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)
 
@@ -58,6 +60,7 @@ IFDEF	EXTERNAL_PORTS
 
 	@SYSREG	80h
 ENDIF
+ENDIF
 
 	MVI	A,80H
 	@out	PALM_CNTRL
@@ -78,7 +81,6 @@ ENDIF
 	MVI	A,0D8h
 	LXI	D,MAP2
 	CALL	PROG_DC
-
 	LXI	H,CCP_START
 	LXI	D, C_BASE
 	LXI	B, (B_BASE-C_BASE)

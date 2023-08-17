@@ -1,5 +1,4 @@
-OWN_GETC	EQU	1
-USE_PRG_DC	EQU	1
+include	RkConfig.mac
 
 include b0disk.mac
 include 82xx.mac
@@ -16,15 +15,10 @@ ELSE
 START_CCP	EQU 9200h-3
 ENDIF
 
-IFDEF	USE_PRG_DC
 	.phase	100h
 include B0PRGDC.ASM
 	.dephase
 	.phase START_CCP
-ELSE
-	.phase START_CCP
-	JMP	BOOT
-ENDIF
 
 include CCP.ASM
 include BDOS.ASM

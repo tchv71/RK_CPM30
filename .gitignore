@@ -22,3 +22,6 @@ RK Enhancements/.DS_Store
 /CPM60K.rk
 /Release/RK_CPM30.log
 /Release/RK_CPM30.vcxproj.AssemblyReference.cache
+/_palmira
+/_palmiraCPM
+*.log

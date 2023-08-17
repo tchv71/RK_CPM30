@@ -1,23 +1,56 @@
-.SUFFIXES: .ASM .REL
+.SUFFIXES: .ASM .REL .BIN
 PORT=COM2:
+ASMDEP=CCP.ASM BDOS.ASM B1MAIN.ASM B2DISK.ASM FDCNTR.ASM B1CONIO.ASM B1DISPB.ASM B1LSTAUX.ASM B0FLPDSK.ASM B0RAMDSK.ASM sdbios.asm b0FlpDmy.asm B0SD.ASM b0disk.mac RK86.MAC SCREEN.MAC E0GETC.ASM B0PRGDC.ASM RkConfig.mac
+M80PATH=D:/M80
 
-.ASM.REL:
-	M80 '=$< /I/L'
-	
-ALL:	CPM.rkl
 
-CPM.REL: CCP.ASM BDOS.ASM B1MAIN.ASM B2DISK.ASM FDCNTR.ASM B1CONIO.ASM B1DISPB.ASM B1LSTAUX.ASM B0FLPDSK.ASM B0RAMDSK.ASM sdbios.asm b0FlpDmy.asm B0SD.ASM b0disk.mac RK86.MAC SCREEN.MAC E0GETC.ASM B0PRGDC.ASM
+ALL:	CPM/CPM.rkl CPM/CPM_P.rkl
 
-CPM.BIN: CPM.REL Makefile
-#CCP.REL BDOS.REL B1MAIN.REL B2DISK.REL FDCNTR.REL B1CONIO.REL B1DISPB.REL B1LSTAUX.REL B0FLPDSK.REL B0RAMDSK.REL
-#	./L80 CCP,BDOS,B1MAIN,B2DISK,FDCNTR,B1CONIO,B1DISPB,B1LSTAUX,B0FLPDSK,B0RAMDSK,CPM/N/X/E
-#	L80 CCP,BDOS,B1MAIN,B2DISK,FDCNTR,B1CONIO,B1DISPB,B1LSTAUX,B0FLPDSK,B0RAMDSK,$@/N/Y/E
-	L80 /P:100,$<,$@/N/Y/E
-	../m80noi/x64/Release/m80noi.exe CPM.PRN
-	../makerk/Release/makerk.exe 100 $@ CPM.rkl
-#	../makerk/Release/makerk.exe 91FD $@ CPM.rkl
+CPM6.REL: $(ASMDEP)
+	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
 
-CPM.rkl: CPM.BIN
+CPMP.REL: $(ASMDEP)
+	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
+
+CPMPC.REL: $(ASMDEP)
+	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
+
+
+_palmira: RkConfigPalmira.mac
+	copy /y RkConfigPalmira.mac RkConfig.mac
+	copy /y RkConfigPalmira.mac _palmira
+# touch equivalent
+	copy /b RkConfig.mac +,,
+	copy /b RkConfig60k.mac +,,
+	copy /b RkConfigPalmiraCPM.mac +,,
+
+_palmiraCPM: RkConfigPalmiraCPM.mac
+	copy /y RkConfigPalmiraCPM.mac RkConfig.mac
+	copy /y RkConfigPalmiraCPM.mac _palmiraCPM
+# touch equivalent
+	copy /b RkConfig.mac +,,
+	copy /b RkConfig60k.mac +,,
+	copy /b RkConfigPalmira.mac +,,
+
+_Rk60k: RkConfig60k.mac
+	copy /y RkConfig60k.mac RkConfig.mac
+	copy /y RkConfig60k.mac _Rk60k
+# touch equivalent
+	copy /b RkConfig.mac +,,
+	copy /b RkConfigPalmiraCPM.mac +,,
+	copy /b RkConfigPalmira.mac +,,
+
+CPM/CPM.rkl: _palmiraCPM CPMPC.BIN
+	../makerk/Release/makerk.exe 100 CPMPC.BIN $@
+
+CPM/CPM_P.rkl: _palmira CPMP.BIN
+	../makerk/Release/makerk.exe 100 CPMP.BIN $@
+
+CPM/CPM60K.rk: _Rk60k CPM6.BIN
+	../makerk/Release/makerk.exe 100 CPM6.BIN $@
+
+.REL.BIN:
+	$(M80PATH)/L80 /P:100,$<,$@/N/Y/E
 
 clean:
 	del *.REL
