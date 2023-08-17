@@ -160,21 +160,6 @@ DskInit:
         call	RamD_I
 	call	SD_I
         jmp	FlpD_I
-        
-
-SAV_SYS::
-	RET
-;	LXI	H,C_BASE;##
-;	LXI	D,0
-;	lxi	b,C_SIZE+D_SIZE
-;	jmp	RAM_TO_EXT
-
-;	CALL	FLSH_WB
-;
-;	LXI	H,C_BASE;##
-;	LXI	D,0
-;	lxi	b,C_SIZE+D_SIZE
-;	jmp	EXT_TO_RAM
 
 ;------ SOME CP/M BIOS FUNCTIONS -------
 

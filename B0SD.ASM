@@ -7,6 +7,9 @@ PUBLIC	SD_R,SD_W
 
 ;EXTRN	CPM_RECORD,CPM_TRACK,DMA_ADDR	; From BxDISK module
 
+IFNDEF	USE_PRG_DC
+SAV_SYS::
+	RET
 LD_SYS::
 	LXI	H,CPM_BIN
 	MVI	D,0
@@ -27,6 +30,72 @@ ENDIF
 
 CPM_BIN:
 	DS	64
+ELSE
+SAV_SYS::
+	LXI	H,0
+	DAD	SP
+	SHLD	STK
+
+	LXI	D,C_BASE
+	LXI	H, 0
+	JMP	LD_S01
+
+LD_SYS::
+	LXI	H,0
+	DAD	SP
+	SHLD	STK
+	LXI	H,C_BASE
+	LXI	D,0
+LD_S01:	LXI	B, (B_BASE-C_BASE) / 4
+
+	MVI	A,0C1H
+	@out	PALM_CNTRL
+
+	XCHG
+	SPHL
+	XCHG
+	INR	B
+@02:	REPT	2
+	POP	D	; 10
+	MOV	M,E	; 7
+	INX	H	; 5
+	MOV	M,D	; 7
+	INX	H	; 5 = 34
+	ENDM
+
+	DCR	C	; 5
+	JNZ	@02	; 10 = 49 / 2 bytes = 25 or (34 * 2 + 15)/4 = 21
+	DCR	B
+	JNZ	@02
+	LHLD	STK
+	SPHL
+
+	MVI	A,0C0H
+	@out	PALM_CNTRL
+	RET
+
+
+IF	0
+;
+;void *memcpy(dest,source,n)
+; void *dest,*source; size_t n;
+;
+memcpy::
+@01:
+	MOV	A,C	; 5
+	ORA	B	; 4
+	JZ	@00	; 10
+	LDAX	D	; 7
+	INX	D	; 5
+	MOV	M,A	; 7
+	INX	H	; 5
+	DCX	B	; 5
+	JMP	@01	; 10 = 58
+@00:
+ENDIF
+
+STK:	DS	2
+ENDIF
 
 ;------ RAM DISK OPERATIONS -------------
 ; READ ONE SECTOR FROM RAM DISK
