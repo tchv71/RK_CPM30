@@ -293,15 +293,64 @@ CmdWriteFile2:
      CALL	SwitchSend
 
      ; Передача блока. Адрес HL, длина DE. (Можно оптимизировать цикл)
-CmdWriteFile1:
-     MOV	A, M
-     INX	H
-     CALL	Send
-     DCX	D
-     MOV	A, D
-     ORA	E
-     JNZ 	CmdWriteFile1
+;CmdWriteFile1:
+;     MOV	A, M
+;     INX	H
+;     CALL	Send
+;     DCX	D
+;     MOV	A, D
+;     ORA	E
+;     JNZ 	CmdWriteFile1
+     MOV        B,H
+     MOV        C,L
+IFDEF  	USE_PRG_DC
+     @SYSREG    0A0H
+     MVI        A,1
+     OUT        80H
+     @SYSREG    80H
+     LXI        H,8001H
+ELSE
+     LXI 	H, USER_PORT+1
+ENDIF
+     ANA        A
+     MOV        A,D
+     RAR
+     MOV        D,A
+     MOV        A,E
+     RAR
+     MOV        E,A
+     INR 	D
+     XRA 	A
+     ORA 	E
+     JZ 	SendBlock2
 
+SendBlock1:
+     REPT        2
+     LDAX        B
+  IFDEF  	USE_PRG_DC
+     STA        8000H                   ; 13
+  ELSE
+     STA        USER_PORT               ; 13
+  ENDIF
+     INX         B                      ; 5
+     MVI         M, 20h			; 10
+     MVI         M, 0			; 10
+;     NOP
+;     NOP
+     ENDM
+     DCR	E		        ; 5
+     JNZ	SendBlock1		; 10 = 66
+SendBlock2:
+     DCR	D
+     JNZ	SendBlock1
+IFDEF  	USE_PRG_DC
+     @SYSREG    0A0H
+     MVI        A,10
+     OUT        80H
+     @SYSREG    80H
+ENDIF
+     MOV        H,B
+     MOV        L,C
      JMP	CmdWriteFile2
 
 ;----------------------------------------------------------------------------
@@ -568,34 +617,53 @@ WaitForReady:
 
 RecvBlock:
      PUSH	H
+     ;MVI        H,20H
+IFDEF  	USE_PRG_DC
+     @SYSREG    0A0H
+     MVI        A,1
+     OUT        80H
+     @SYSREG    80H
+     LXI        H,8001H
+ELSE
      LXI 	H, USER_PORT+1
+ENDIF
+     ANA        A
+     MOV        A,D
+     RAR
+     MOV        D,A
+     MOV        A,E
+     RAR
+     MOV        E,A
      INR 	D
      XRA 	A
      ORA 	E
      JZ 	RecvBlock2
 
 RecvBlock1:
-IF 1
-     ;MVI        M, 20h			; 7
-     MVI        A, 20h
-     @out       USER_PORT+1
-     ;MVI        M, 0			; 7
-     XRA        A
-     @out       USER_PORT+1
-ELSE
-     MVI        M, 20h			; 7
-     MVI        M, 0			; 7
-ENDIF
-     NOP
-     NOP
-     @in	USER_PORT		; 13
+    REPT        2
+    MVI         M, 20h			; 10
+    MVI         M, 0			; 10
+  IFDEF  	USE_PRG_DC
+     LDA        8000H                   ; 13
+  ELSE
+     LDA        USER_PORT               ; 13
+  ENDIF
+;     NOP
+;     NOP
      STAX	B		        ; 7
-     INX	B		        ; 5
+     INX	B		        ; 5 = 51
+     ENDM
      DCR	E		        ; 5
-     JNZ	RecvBlock1		; 10 = 54
+     JNZ	RecvBlock1		; 10 = 66
 RecvBlock2:
      DCR	D
      JNZ	RecvBlock1
+IFDEF  	USE_PRG_DC
+     @SYSREG    0A0H
+     MVI        A,10
+     OUT        80H
+     @SYSREG    80H
+ENDIF
      POP	H
      RET
 
