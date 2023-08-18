@@ -278,8 +278,11 @@ match:
 	lxi	d,hstbuf
 	dad	d		;hl = host address
 	xchg			;now in DE
+	LXI	H,0
+	DAD	SP
+	SHLD	STK
 	lhld	dmaadr		;get/put CP/M data
-	mvi	c,128		;length of move
+	mvi	c,128/4		;length of move
 	lda	readop		;which way?
 	ora	a
 	jnz	rwmove		;skip if read
@@ -290,13 +293,21 @@ match:
 	xchg			;source/dest swap
 ;
 rwmove:
-	;C initially 128, DE is source, HL is dest
-	ldax	d		;source character
-	inx	d
-	mov	m,a		;to dest
-	inx	h
-	dcr	c		;loop 128 times
-	jnz	rwmove
+	XCHG
+	SPHL
+	XCHG
+@12:	REPT	2
+	POP	D	; 10
+	MOV	M,E	; 7
+	INX	H	; 5
+	MOV	M,D	; 7
+	INX	H	; 5 = 34
+	ENDM
+
+	DCR	C	; 5
+	JNZ	@12	; 10 = 49 / 2 bytes = 25 or (34 * 2 + 15)/4 = 21
+	LHLD	STK
+	SPHL
 ;
 ;	data has been moved to/from host buffer
 	lda	wrtype		;write type
