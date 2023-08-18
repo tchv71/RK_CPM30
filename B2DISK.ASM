@@ -163,13 +163,16 @@ DskInit:
 
 ;------ SOME CP/M BIOS FUNCTIONS -------
 
-HOME@:	MVI	C,0
-SETTRK:	LXI	H,CPM_TRACK
+HOME@:	CALL	@home@
+	MVI	C,0
+SETTRK:	call	@settrk
+	LXI	H,CPM_TRACK
 	MOV	M,C
 	RET
 
 
-SELDSK:	LXI	H,0
+SELDSK:	call	@seldsk
+	LXI	H,0
 	MOV	A,C
 	STA	CPM_DISK
 	;CALL	CHECK_D
@@ -186,6 +189,8 @@ SELDSK:	LXI	H,0
 	DAD	H
 	LXI	D,DPBASE
 	DAD	D
+	MOV	A,M
+	STA	cpmspt
 	RET
 
 CHECK_D::
@@ -238,13 +243,15 @@ CHECK_D::
 	JMP	CONIN
 
 
-SETREC:	LXI	H,CPM_RECORD
+SETREC:	call	@setsec
+	LXI	H,CPM_RECORD
 	MOV	M,C
 	RET
 
 ;-----------------------------------------
 
 SECTRN:
+	jmp	@sectran
 ifdef	PROFI_DISKS
 	mov	a,c
 	inr	a
@@ -306,7 +313,8 @@ noFLOP80:
 	ret
 
 ;-------------------------
-SETDMA:	MOV	L,C
+SETDMA:	call	@setdma
+	MOV	L,C
 	MOV	H,B
 	SHLD	DMA_ADDR
 	RET
