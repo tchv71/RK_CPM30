@@ -248,6 +248,7 @@
     <None Include="BDOS.ASM" />
     <None Include="CCP.ASM" />
     <None Include="Cpm.ASM" />
+    <None Include="DEBLOCK.ASM" />
     <None Include="E0GETC.ASM" />
     <None Include="FDCNTR.ASM" />
     <None Include="Makefile" />
