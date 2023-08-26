@@ -164,11 +164,8 @@ DskInit:
 ;------ SOME CP/M BIOS FUNCTIONS -------
 
 HOME@:	CALL	@home@
-	MVI	C,0
-SETTRK:	call	@settrk
-	LXI	H,CPM_TRACK
-	MOV	M,C
-	RET
+	LXI	B,0
+SETTRK:	jmp	@settrk
 
 
 SELDSK:	call	@seldsk
@@ -189,8 +186,6 @@ SELDSK:	call	@seldsk
 	DAD	H
 	LXI	D,DPBASE
 	DAD	D
-	MOV	A,M
-	STA	cpmspt
 	RET
 
 CHECK_D::
@@ -313,10 +308,10 @@ noFLOP80:
 	ret
 
 ;-------------------------
-SETDMA:	call	@setdma
-	MOV	L,C
-	MOV	H,B
-	SHLD	DMA_ADDR
+SETDMA:
+	PUSH	H
+	call	@setdma
+	POP	H
 	RET
 
 ;============ FLOPPY DISK OPERATIONS ============
@@ -328,6 +323,15 @@ SETDMA:	call	@setdma
 ;	POSITION
 ;\
 RD_REC:
+	PUSH	H
+	PUSH	D
+	PUSH	B
+	CALL	SD_R
+	POP	B
+	POP	D
+	POP	H
+	RET
+
 	LDA	CPM_DISK
 	CPI	SD
 	JMP	SD_R
@@ -341,6 +345,14 @@ RD_REC:
 ;  (TRACK) & (SECTOR) DEFINES RECORD
 ;		POSITION
 WR_REC::
+	PUSH	H
+	PUSH	D
+	PUSH	B
+	CALL	SD_W
+	POP	B
+	POP	D
+	POP	H
+	RET
 	LDA	CPM_DISK
 	CPI	SD
 	JMP	SD_W
@@ -370,11 +382,11 @@ SECT::	ds	1
 SIDE::	ds	1
 DRIVE:	ds	1
 
-CPM_TRACK::	DB	0
-CPM_RECORD::	DB	0
-CPM_DISK::	DB	0
+;CPM_TRACK::	DB	0
+;CPM_RECORD::	DB	0
+;CPM_DISK::	DB	0
 
-DMA_ADDR::	DW	0
+;DMA_ADDR::	DW	0
 _DPTR:		DW	0
 
 ;STK_SAVE:	DS	2

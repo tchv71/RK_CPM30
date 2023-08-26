@@ -5,7 +5,7 @@
 
 PUBLIC	RamD_R,RamD_W
 
-;EXTRN	CPM_RECORD,CPM_TRACK,DMA_ADDR	; From BxDISK module
+;EXTRN	CPM_RECORD,sektrk,DMA_ADDR	; From BxDISK module
 
 
 ;------ RAM DISK OPERATIONS -------------
@@ -24,7 +24,7 @@ RamD_I::
 ; Out:	HL - DMA address 	(RAM)
 ;	DE - RAMDISK address 	(ERAM)
 ;	BC - record size (128)
-CMP_ADR:LDA	CPM_TRACK
+CMP_ADR:LDA	sektrk
 	MOV	H,A
 	MVI	L,0
 	DAD	H
@@ -38,7 +38,7 @@ CMP_ADR:LDA	CPM_TRACK
 	DCR	A
 	JNZ	@cmp0
 @cmp1:	xchg
-	lhld	DMA_ADDR
+	lhld	dmaadr
 	RET
 
 

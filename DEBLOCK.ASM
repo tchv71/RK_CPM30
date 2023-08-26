@@ -76,13 +76,15 @@ homed:
 	;select disk
 	mov	a,c		;selected disk number
 	sta	sekdsk		;seek disk number
-;	mov	l,a		;disk number to HL
-;	mvi	h,0
-;	rept	4		;multiply by 16
-;	dad	h
-;	endm
-;	lxi	d,dpbase	;base of parm block
-;	dad	d		;hl=.dpb(curdsk)
+	mov	l,a		;disk number to HL
+	mvi	h,0
+	rept	4		;multiply by 16
+	dad	h
+	endm
+	lxi	d,dpbase	;base of parm block
+	dad	d		;hl=.dpb(curdsk)
+	MOV	A,M
+	STA	cpmspt
 	ret
 ;
 @settrk:
@@ -293,21 +295,21 @@ match:
 	xchg			;source/dest swap
 ;
 rwmove:
-	XCHG
-	SPHL
-	XCHG
-@12:	REPT	2
-	POP	D	; 10
-	MOV	M,E	; 7
-	INX	H	; 5
-	MOV	M,D	; 7
-	INX	H	; 5 = 34
-	ENDM
+	xchg
+	sphl
+	xchg
+@12:	rept	2
+	pop	d	; 10
+	mov	m,e	; 7
+	inx	h	; 5
+	mov	m,d	; 7
+	inx	h	; 5 = 34
+	endm
 
-	DCR	C	; 5
-	JNZ	@12	; 10 = 49 / 2 bytes = 25 or (34 * 2 + 15)/4 = 21
-	LHLD	STK
-	SPHL
+	dcr	c	; 5
+	jnz	@12	; 10 = 49 / 2 bytes = 25 or (34 * 2 + 15)/4 = 21
+	lhld	stk
+	sphl
 ;
 ;	data has been moved to/from host buffer
 	lda	wrtype		;write type
@@ -426,8 +428,10 @@ readhst:
 ;*                                                   *
 ;*****************************************************
 ;
+CPM_DISK:
 sekdsk:	ds	1		;seek disk number
 sektrk:	ds	2		;seek track number
+CPM_RECORD:
 seksec:	ds	1		;seek sector number
 ;
 hstdsk:	ds	1		;host disk number

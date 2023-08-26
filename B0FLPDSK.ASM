@@ -38,7 +38,7 @@ ifdef	Debug
 	push	b
 	call	PRNT
 	db	10,13,str,' T:',0
-	lda	Cpm_TRACK
+	lda	sektrk
 	pop	b
 	call	mr_pos
 endif
@@ -187,7 +187,7 @@ CP_S0:	INX	H
 	INR	A
 	MOV	M,A
 	INX	H
-	LDA	CPM_TRACK
+	LDA	sektrk
 	MOV	M,A
 	POP	H
 	RET
@@ -296,7 +296,7 @@ TRANS_REC:
 	CALL	CALC_OFFSET
 	XCHG
 	MVI	C,128
-	LHLD	DMA_ADDR
+	LHLD	dmaadr
 	XCHG
 	JMP	CPYREC
 
@@ -376,7 +376,7 @@ SAVE_IN_BUF:
 	ORA	C
 	STA	SECTALL
 	XCHG
-	LHLD	DMA_ADDR
+	LHLD	dmaadr
 CPYREC:	MVI	B,128
 CPY_S1:	MOV	A,M
 	STAX	D
