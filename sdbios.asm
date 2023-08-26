@@ -306,9 +306,9 @@ CmdWriteFile2:
 IFDEF  	USE_PRG_DC
      @SYSREG    0A0H
      MVI        A,1
-     OUT        80H
+     OUT        PPI_PG
      @SYSREG    80H
-     LXI        H,8001H
+     LXI        H, PPI_PG*256+1
 ELSE
      LXI 	H, USER_PORT+1
 ENDIF
@@ -328,7 +328,7 @@ SendBlock1:
      REPT        2
      LDAX        B
   IFDEF  	USE_PRG_DC
-     STA        8000H                   ; 13
+     STA        PPI_PG*256              ; 13
   ELSE
      STA        USER_PORT               ; 13
   ENDIF
@@ -346,7 +346,7 @@ SendBlock2:
 IFDEF  	USE_PRG_DC
      @SYSREG    0A0H
      MVI        A,10
-     OUT        80H
+     OUT        PPI_PG
      @SYSREG    80H
 ENDIF
      MOV        H,B
@@ -614,16 +614,16 @@ WaitForReady:
 ;----------------------------------------------------------------------------
 ; Принять DE байт по адресу BC
 ; Портим A
-
+PPI_PG  EQU     0F3H
 RecvBlock:
      PUSH	H
      ;MVI        H,20H
 IFDEF  	USE_PRG_DC
      @SYSREG    0A0H
      MVI        A,1
-     OUT        80H
+     OUT        PPI_PG
      @SYSREG    80H
-     LXI        H,8001H
+     LXI        H,PPI_PG*256+1
 ELSE
      LXI 	H, USER_PORT+1
 ENDIF
@@ -644,7 +644,7 @@ RecvBlock1:
     MVI         M, 20h			; 10
     MVI         M, 0			; 10
   IFDEF  	USE_PRG_DC
-     LDA        8000H                   ; 13
+     LDA        PPI_PG*256              ; 13
   ELSE
      LDA        USER_PORT               ; 13
   ENDIF
@@ -661,7 +661,7 @@ RecvBlock2:
 IFDEF  	USE_PRG_DC
      @SYSREG    0A0H
      MVI        A,10
-     OUT        80H
+     OUT        PPI_PG
      @SYSREG    80H
 ENDIF
      POP	H
