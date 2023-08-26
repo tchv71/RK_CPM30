@@ -103,10 +103,10 @@ lf	equ	0ah	;line feed
 ctl	equ	5eh	;up arrow
 
 ; serial number (not documented in original DRI source file)
-	db	0	; OEM number, low byte
-	db	0	; CP/M version, 16h = 2.2
-	db	0	; OEM number, high byte
-	db	0,0,0	; serial number, big-endian
+;	db	0	; OEM number, low byte
+;	db	0	; CP/M version, 16h = 2.2
+;	db	0	; OEM number, high byte
+;	db	0,0,0	; serial number, big-endian
 
 ;	enter here from the user's program with function number in c,
 ;	and information address in d,e
