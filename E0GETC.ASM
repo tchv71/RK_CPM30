@@ -5,50 +5,11 @@
 
 ?Ctrl	equ	40h
 ?Shift	equ	20h
+REP_VAL	equ	50
 
 IFNDEF	PPI_ADR
 ;EXTRN	PPI_ADR
 ENDIF
-
-; Return SYMBOL and SHIFT/CNTRL flags
-; 	40h - CNTRL  &  80h - SHIFT
-;	B - SYMBOL or MASK
-;	C - SYMBOL
-GETCHC::
-	CALL	GETCHR
-	PUSH	H
-	push	psw
-	ANI	3FH
-	MOV	C,A
-	LDA	@CTRL
-	MOV	B,A
-	@in	PPI+2
-	ANA	B
-	;LDA	PPI+2
-	;LHLD	PPI_ADR
-	;INX	H
-	;INX	H
-	;ANA	M
-	;PUSH	H ; PPI+2
-	MOV	A,C
-	JNZ	$+5
-	ORI	40H
-	MOV	C,A
-
-	LDA	@SHFT
-	;POP	H
-	MOV	B,A
-	@in	PPI+2
-	ANA	B
-	;ANA	M
-	MOV	A,C
-	JNZ	$+5
-	ORI	80H
-	mov	b,a
-	pop	psw
-	mov	c,a
-	POP	H
-	RET
 
 ; Get character from concole (returns in Acc)
 GETCHR:
@@ -56,7 +17,6 @@ GETCHR:
 	PUSH	D
 	PUSH	B
 	CALL	GTC
-	;CALL	0F803h
 	POP	B
 	POP	D
 	POP	H
@@ -64,20 +24,46 @@ GETCHR:
 
 ; Get keyboard status A=0 - not pressed; A=0FFh - key pressed
 GETST:
-	LHLD	PNT
-	MOV	A,M
-	INR	A
 	MVI	A,0
+	@out	PPI
+	@in	PPI+1
+	INR	A
 	RZ
 	CALL	GTVECT
-	LDA	ET1
-	INR	A
-	MVI	A,0
+	ORA	A
 	RZ
+	LDA	NREP
+	ORA	A
+	JZ	GETST0
 	DCR	A
+	MVI	A,0FFH
+	RNZ
+	LDA	WTREP
+	DCR	A
+	STA	WTREP
+	JZ	GETST1
+	XRA	A ; NREP == 1
+	STA	NREP
+	RET
+GETST1:
+	MVI	A,2
+	STA	NREP
+	MVI	A,0FFh
+	RET
+GETST0:
+	MVI	A,REP_VAL
+	STA	WTREP
+	MVI	A,0FFH
+	STA	ET1
 	RET
 
-GTC:	LHLD	PNT
+WTREP:	DS	1
+
+GTC:
+	MVI	A,REP_VAL
+	STA	WTREP
+
+	LHLD	PNT
 	MOV	A,M
 	CPI	0FFH
 	JZ	GTCH0
@@ -85,10 +71,12 @@ GTC:	LHLD	PNT
 	SHLD	PNT
 	JMP	??RUS
 
-GTCH0:	MVI	B,50
+GTCH0:	MVI	B,REP_VAL
 RP3:	PUSH	B
 	CALL	GTVECT
 	POP	B
+	ORA	A
+	JZ	RP3
 	LDA	NREP
 	CPI	1
 	JNZ	RP1
@@ -174,6 +162,7 @@ ENDIF
 
 ; (ET1) - Pressed keys vector (in order of press)
 ; (NREP) - Repeat number
+; Returns A = 0 - key not pressed A=0FFH - keys pressed
 GTVECT:	MVI	B,5
 GETC0:	PUSH	B
 	LDA	@RD
@@ -190,7 +179,9 @@ GETC0:	PUSH	B
 	DCR	B
 	JNZ	GETC0
 	STA	ET1
-	JMP	GTVECT
+	XRA	A
+	RET
+;	JMP	GTVECT
 
 GTV04: 	LXI	H,ET2
 	LXI	D,ET1
