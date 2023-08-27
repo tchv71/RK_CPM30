@@ -8,7 +8,7 @@ PUBLIC	DSKINIT 	; Disk initialisation
 ; CP/M BIOS functions
 PUBLIC	HOME@,SELDSK,SETDMA,SECTRN,SETTRK,SETREC,RD_REC,WR_REC
 
-DSKVER::	DB	10,13,'Disk BIOS V3.1      7-sep-1993',0
+DSKVER::	DB	10,13,'Disk BIOS V3.2(SD) 27-aug-2023',0
 
 ; History
 

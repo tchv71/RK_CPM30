@@ -69,7 +69,21 @@ BOOT:	LXI	SP,100H
 	CALL	PRNT;##
 	DB	27,45H,	'CP/M-80 vers. 2.2'
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
-	DB	0DH,0AH,'BIOS vers. 3.0      (c) TCHV,1991-92'
+	DB	0DH,0AH,'BIOS vers. 3.2      (c) TCHV,1991-92'
+	DB	",2023", 0DH, 0AH
+IFDEF	USE_PRG_DC
+IFDEF EXTERNAL_PORTS
+	DB	"Palmira ProgDC in/out"
+ELSE
+	DB	"Palmira ProgDC"
+ENDIF
+ELSE
+IFDEF	RK60K
+	DB	"RK60K"
+ELSE
+	DB	"Palmira"
+ENDIF
+ENDIF
 	DB	0DH,0AH,0
 
 	lxi	h,DSKVER;##
