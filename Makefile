@@ -55,6 +55,6 @@ CPM/CPM60K.rk: _Rk60k CPM6.BIN
 clean:
 	del *.REL
 
-send: cpm\CPM_P.rkl
+send: $(SENDPATH)
 	MODE $(PORT) baud=115200 parity=N data=8 stop=1
 	cmd /C copy /B $< $(PORT)
