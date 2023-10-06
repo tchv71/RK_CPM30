@@ -7,7 +7,11 @@
 ; and 8257 DMA chip
 
 CONVER::
-	DB	10,13,'Console I/O        V3.0 Healh/Zenith',0
+	DB	10,13,'Console I/O        V3.0 Healh/Zenith'
+IFDEF	CONSOLE80
+	DB	' (80 symbols width)'
+ENDIF
+	DB	0
 
 ; This module defines following procedures :
 PUBLIC		CON_ST,CONIN,CONOUT
