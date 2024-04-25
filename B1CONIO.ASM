@@ -534,7 +534,9 @@ SETSCR::
 	JZ	@wait_RVV
 
 ;*** Load 8257 controller ***
-
+	@in	DMA+0Fh
+	inr	a
+	jz	VT37
 	mvi	a,80h
 	@out	DMA+8	; Control register
 
@@ -552,6 +554,28 @@ SETSCR::
 	@out	DMA+5
 	mvi	a,0a4h
 	@out	DMA+8
+	POP	B
+	POP	H
+	RET
+VT37:
+	XRA	A
+	@out	DMA+0Dh
+	rept	2
+		mov	a,m
+		@out	DMA+4	; Load channel 2
+		inx	h
+	endm
+	rept	2
+		mov	a,m
+		@out	DMA+5
+		inx	h
+	endm
+	mvi	a,1Ah
+	@out	DMA+0Bh
+	mvi	a,8
+	@out	DMA+8
+	mvi	a,0bh
+	@out	DMA+0Fh
 	POP	B
 	POP	H
 	RET

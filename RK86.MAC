@@ -66,7 +66,7 @@ PSG1	equ	0CC00h;  8253 first	          *
 PPI	equ	0C200h;  8255 frist		  *
 PPI2	equ	0C400h;  8255 second	   	  *
 DISP	equ	0C000h;  8275 display adapter	  *
-DMA	equ	0E000h;  8257 DMA chip	    	  *
+DMA	equ	0C600h;  8257 DMA chip	    	  *
 PALM_CNTRL equ	0CE00h;  Palmira control byte     *
 ;**************************************************
 ENDIF
