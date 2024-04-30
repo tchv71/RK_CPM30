@@ -30,6 +30,7 @@ IFDEF EXTERNAL_PORTS
 ;************ Controller's mapping ****************
 PPI	equ	000h;  8255 first		  *
 PPI2	equ	010h;  8255 second	   	  *
+PPI3	equ	050h;  8255 third	   	  *
 DISP	equ	020h;  8275 display adapter	  *
 DMA	equ	030h;  8257 DMA chip	    	  *
 PSG1	equ	040h;  8253 first	          *
