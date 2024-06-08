@@ -113,15 +113,8 @@ RP01:	CALL	MDEL
 ??RUS:	CPI	0FEH
 	RNZ
 	@in	PPI+2
-	;PUSH	H
-	;LHLD	PPI_ADR
-	;INX	H
-	;INX	H
-	;MOV	A,M
 	XRI	8
 	@out	PPI+2
-	;MOV	M,A
-	;POP	H
 	JMP	GTC
 
 MDEL:

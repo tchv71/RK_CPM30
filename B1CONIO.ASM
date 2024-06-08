@@ -13,6 +13,8 @@ IFDEF	CONSOLE80
 ENDIF
 	DB	0
 
+ROBOTRON	Equ	1
+
 ; This module defines following procedures :
 PUBLIC		CON_ST,CONIN,CONOUT
 PUBLIC		PRNT,PUTS
@@ -86,7 +88,7 @@ CorrCntrl:
 	lxi	h,CorrTbl
 @loop:	mov	a,m
 	inx	h
-        inx	h
+	inx	h
 	inr	a
 	jz	@exit
 	dcr	a
@@ -147,7 +149,6 @@ ENDIF
 	LHLD	CHPNT
 	CALL	OUTC
 	SHLD	CHPNT
-
 	lhld	CURX
 	call	GOTOXY
 	POP	PSW
@@ -168,6 +169,11 @@ OUTC:	MOV	B,A
 	MOV	A,B
 	CPI	'Y'
 	RZ
+IF ROBOTRON
+	XRA	A
+	STA	?ESC
+	RET
+ENDIF
 	PUSH	PSW
 	XRA	A
 	STA	?ESC
@@ -229,7 +235,7 @@ FILL:	MVI	M,0
 	DCR	A
 	JNZ	FILL
 	POP	H
-        RET
+	RET
 
 
 ; DELETE TO END OF LINE
@@ -250,8 +256,24 @@ DELEOL:	PUSH	H
 	JZ	LEFT
 	CPI	7
 	JZ	BELL
+IF ROBOTRON
+	CPI	1
+	JZ	@HOME
+	CPI	0CH
+	JZ	CLS
+	CPI	1AH
+	JZ	UP
+	CPI	15H
+	JZ	RIGHT
+	CPI	16H
+	JZ	DELEOL
+ELSE
 	CPI	1FH
 	JZ	CLS
+ENDIF
+	CPI	1FH
+	JZ	CLS
+PutcNoCtrl:
 	MOV	M,A
 	INX	H
 	LDA	CURX
@@ -269,13 +291,32 @@ DELEOL:	PUSH	H
 	SHLD	STRADR
 	RET
 
-_ESC:	MVI	A,3
+ESC5F:	DB	0
+
+_ESC:
+IF ROBOTRON
+	MVI	A,2
+ELSE
+	MVI	A,3
+ENDIF
 	STA	?ESC
 	RET
 
-_ESC1:	LDA	YSIZE
+_ESC1:
+IF ROBOTRON
+	MOV	A,B
+	CPI	5Fh
+	JNZ	_ESC11
+	MVI	A,1
+	STA	ESC5F
+	RET
+ENDIF
+_ESC11:	LDA	YSIZE
 	PUSH	PSW
+IF ROBOTRON
+ELSE
 	ADI	20H
+ENDIF
 	SUB	B
 	STA	CURY
 	MOV	B,A
@@ -289,12 +330,27 @@ _@ESC:	SHLD	STRADR
 	CALL	NXT_S
 	JMP	_@ESC
 
-_ESC2:	LDA	XSIZE
+_ESC2:
+IF ROBOTRON
+	LDA	ESC5F
+	ORA	A
+	MVI	A,0
+	STA	ESC5F
+	MOV	A,B
+	JNZ	PutcNoCtrl
+ENDIF
+	LDA	XSIZE
+IF ROBOTRON
+	SUB	B
+	STA	CURX
+	MOV	A,B
+ELSE
 	ADI	20H
 	SUB	B
 	STA	CURX
 	MOV	A,B
 	SUI	20H
+ENDIF
 	MOV	C,A
 	MVI	B,0
 	DAD	B
@@ -312,7 +368,7 @@ SCROLL:	PUSH	H
 	LHLD	BEGSCR
 	MOV	D,H
 	MOV	E,L
-        CALL	NXT_S
+	CALL	NXT_S
 	LDA	YSIZE
 	DCR	A
 	MOV	C,A
@@ -386,7 +442,7 @@ UP:	LDA	CURY
 	STA	CURY
 	call	PrevSt
 	push	h
-        LHLD	STRADR
+	LHLD	STRADR
 	call	PrevSt
 	shld	STRADR
 	pop	h
@@ -430,9 +486,11 @@ DWN0:	RET
 
 SCRLL:	LHLD	CHPNT
 	JMP	SCROLL
+NO_EI:	DB	1
 
 CLS:	CALL	@HOME
 IF 1
+	DI
 	PUSH	H
 	PUSH	D
 	LXI	B,SCR_SIZE/4
@@ -451,6 +509,10 @@ CLS0:
 	SPHL
 	POP	D
 	POP	H
+	LDA	NO_EI
+	ORA	A
+	RNZ
+	EI
 	RET
 ELSE
 	LDA	YSIZE
@@ -507,8 +569,164 @@ GOTOXY:	MVI	A,80H	; Cursor move command
 
 ;EXTRN	Disp_PB
 
+Init_IRQ:
+	DI
+	PUSH	H
+	lxi	h,Irq_handler
+	shld	39h
+	mvi	a,0c3h
+	sta	38h
+	LXI	d,TimeBuf
+	push	d
+	mvi	c,2ch
+	call	DATE
+	pop	d
+SetClock:
+	ldax	d
+	inx	d
+	call	ToBcd
+	lxi	h,Clock+2
+	mov	m,a
+	dcx	h
+	ldax	d
+	inx	d
+	call	ToBcd
+	mov	m,a
+	dcx	h
+	ldax	d
+	call	ToBcd
+	mov	m,a
+	POP	H
+	;EI
+	RET
+
+Irq_Handler:
+	PUSH	PSW
+	@in	DISP+1
+	PUSH	H
+	LHLD	TICK_COUNTER
+	INX	H
+	SHLD	TICK_COUNTER
+	MOV	A,H
+	ORA	L
+	JNZ	irq01
+	LHLD	TICK_COUNTER+2
+	INX	H
+	SHLD	TICK_COUNTER+2
+irq01:	CALL	UpdateClock
+	POP	H
+	POP	PSW
+	EI
+	RET
+
+ClockSumm:
+	DW	0
+
+Clock:	DB	0,0,0
+
+TimeBuf:
+Hours:		DB	0
+Minutes:	DB	0
+Seconds:	DB	0
+SecondFraction:	DB	0
+SubSeconds:	DB	0
+
+ToBcd:
+	push	b
+	mvi	c,0
+tobcd02:
+	cpi	10
+	jc	tobcd01
+	sui	10
+	inr	c
+	jmp	tobcd02
+tobcd01:
+	mov	b,a
+	mov	a,c
+	rlc
+	rlc
+	rlc
+	rlc
+	add	b
+	pop	b
+	ret
+
+UpdateClock:
+	lda	ClockSumm+1
+	inr	a
+	sta	ClockSumm+1
+	push	b
+	lxi	b,-15727 ; = round(61.4334*256)
+	lhld	ClockSumm
+	dad	b
+	pop	b
+	rnc
+	shld	ClockSumm
+; A second has passed
+	LXI	H,Clock
+	call	IncPos
+	jnz	DispTime
+	mvi	m,0
+	inx	h
+	call	IncPos
+	jnz	DispTime
+	mvi	m,0
+	inx	h
+	call	IncPos
+	cpi	24h
+	jnz	DispTime
+	mvi	m,0
+DispTime:
+	push	d
+	push	b
+	lxi	d,SCR_BUFF+2*PHYS_W-1
+	mvi	c,3
+	lxi	h,Clock
+DispT01:
+	mov	b,m
+	mov	a,b
+	ani	0fh
+	adi	'0'
+	stax	d
+	dcx	d
+	mov	a,b
+	ani	0f0h
+	rrc
+	rrc
+	rrc
+	rrc
+	ani	0fh
+	adi	'0'
+	stax	d
+	dcx	d
+	dcr	c
+	jz	DispT02
+	mvi	a,':'
+	stax	d
+	dcx	d
+DispT02:
+	inx	h
+	jnz	DispT01
+	pop	b
+	pop	d
+	ret
+
+IncPos:
+	inr	m
+	mov	a,m
+	ani	0fH
+	cpi	10
+	mov	a,m
+	rnz
+	ani	0F0h
+	adi	10h
+	mov	m,a
+	cpi	60h
+	ret
+
 ; Set a screen mode according to Disp_PB
 SETSCR::
+	DI
 	PUSH	H
 	PUSH	B
 
@@ -534,6 +752,8 @@ SETSCR::
 	JZ	@wait_RVV
 
 ;*** Load 8257 controller ***
+SetupDMA:
+	;DI
 	@in	DMA+0Fh
 	inr	a
 	jz	VT37
@@ -554,9 +774,7 @@ SETSCR::
 	@out	DMA+5
 	mvi	a,0a4h
 	@out	DMA+8
-	POP	B
-	POP	H
-	RET
+	JMP	END_DISP
 VT37:
 	XRA	A
 	@out	DMA+0Dh
@@ -576,8 +794,13 @@ VT37:
 	@out	DMA+8
 	mvi	a,0bh
 	@out	DMA+0Fh
+END_DISP:
 	POP	B
 	POP	H
+	LDA	NO_EI
+	ORA	A
+	RNZ
+	EI
 	RET
 
 ; User defined window coordinates

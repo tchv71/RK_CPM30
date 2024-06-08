@@ -49,8 +49,9 @@ WBOOT_ADR:
 	JMP	WR_REC;##;  !	!
 	JMP	LST_ST;##;_/	!
 	JMP	SECTRN;##;______/
-	JMP	SET_CONFIG
 
+	JMP	SET_CONFIG
+	JMP	DATE
 ;	JMP	ERR_READ
 ;	LXI	H,C_BASE+7CDH	; SPECIAL SUBROUTINE FOR CCP
 ;	MOV	A,M
@@ -58,6 +59,55 @@ WBOOT_ADR:
 ;	JZ	C_BASE+76BH
 ;	MVI	M,2
 ;	JMP	C_BASE+6D8H
+
+DATE:
+	push	d
+	@in	0FFh
+	mvi	a,0C0h
+	@out	0FFh
+	; Set PPI3 as PPI2 temporary
+	mvi	a,14
+	@out	PPI2
+	@out	PPI2+1
+	@out	PPI2+2
+	@out	PPI2+3
+	@in	0FFh
+	mvi	a,80h
+	@out	0FFh
+
+	call	DispDate
+
+	push	psw
+	@in	0FFh
+	mvi	a,0C0h
+	@out	0FFh
+	; Restore PPI2
+	mvi	a,1
+	@out	PPI2
+	@out	PPI2+1
+	@out	PPI2+2
+	@out	PPI2+3
+	@in	0FFh
+	mvi	a,80h
+	@out	0FFh
+	pop	psw
+	pop	d
+	cpi	2bh
+	jz	SetClock
+	ret
+
+DispDate:
+	mov	a,c
+	cpi	2aH
+	jz	CmdGetDate
+	cpi	2bh
+	jz	CmdSetDate
+	cpi	2ch
+	jz	CmdGetTime
+	cpi	2dh
+	jz	CmdSetTime
+	mvi	A,0FFH
+	ret
 
 SET_CONFIG:
 	XCHG
@@ -96,19 +146,27 @@ IFDEF PALM_CNTRL
 	MOV	M,E
 	INX	H
 	MOV	M,D
+	INX	H
 ENDIF
+	LXI	D,PPI3
+	MOV	M,E
+	INX	H
+	MOV	M,D
+	INX	H
 	RET
 
 
 ;------ FIRST TIME INITIALIZATION --------
 
-BOOT:	LXI	SP,100H
+BOOT:	MVI	a,80h
+	@out	PALM_CNTRL
+	LXI	SP,C_BASE-100h
 	CALL	DskInit;##
 	;CALL	SETSCR
 	CALL	SAV_SYS;##
 	CALL	SETSCR
 	CALL	PRNT;##
-	DB	27,45H,	'CP/M-80 vers. 2.2'
+	DB	1FH,	'CP/M-80 vers. 2.2'
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
 	DB	0DH,0AH,'BIOS vers. 3.2      (c) TCHV,1991-92'
 	DB	",2023", 0DH, 0AH
@@ -138,15 +196,19 @@ ENDIF
 	STA	IO_BYTE
 
 WBOOT:	; WARM START OF CP/M BIOS - LOADING SYSTEM
-	LXI	SP,100H
+	LXI	SP,C_BASE-100h
 	CALL	LOAD_FONT
 	CALL	SD_I01
 	MVI	C,0
 	CALL	SELDSK
 	CALL	HOME@
 WBT:	CALL	SETSCR;##
-
 	CALL	LD_SYS;##
+
+	XRA	A
+	STA	NO_EI
+	CALL	Init_IRQ
+	EI
 
 	LHLD	C_BASE
 	MOV	A,L	; CHECK CP/M DISK PRESENCE

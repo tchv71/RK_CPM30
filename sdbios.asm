@@ -11,16 +11,17 @@ USER_PORT       EQU PPI2    ; Адрес КР580ВВ55
 SEND_MODE       EQU 10000000b ; Режим передачи (1 0 0 A СH 0 B CL)
 RECV_MODE       EQU 10010000b ; Режим приема (1 0 0 A СH 0 B CL)
 
-ERR_START   	EQU 040h
-ERR_WAIT    	EQU 041h
-ERR_OK_NEXT 	EQU 042h
-ERR_OK          EQU 043h
-ERR_OK_READ     EQU 044h
-ERR_OK_ENTRY    EQU 045h
-ERR_OK_WRITE	EQU 046h
-ERR_OK_ADDR  	EQU 047h
-ERR_OK_BLOCK    EQU 04Fh 
-
+ERR_START   	EQU 40h
+ERR_WAIT    	EQU 41h
+ERR_OK_NEXT 	EQU 42h
+ERR_OK          EQU 43h
+ERR_OK_CMD      EQU 43h
+ERR_OK_READ     EQU 44h
+ERR_OK_ENTRY    EQU 45h
+ERR_OK_WRITE	EQU 46h
+ERR_OK_ADDR  	EQU 47h
+ERR_OK_BLOCK    EQU 4Fh
+ERR_DATETIME    EQU 50H
 VER_BUF         EQU 0
 
 ;----------------------------------------------------------------------------
@@ -335,8 +336,6 @@ SendBlock1:
      INX         B                      ; 5
      MVI         M, 20h			; 10
      MVI         M, 0			; 10
-;     NOP
-;     NOP
      ENDM
      DCR	E		        ; 5
      JNZ	SendBlock1		; 10 = 66
@@ -345,13 +344,95 @@ SendBlock2:
      JNZ	SendBlock1
 IFDEF  	USE_PRG_DC
      @SYSREG    0A0H
-     MVI        A,10
+     MVI        A,MEM_HI+10h
      OUT        PPI_PG
      @SYSREG    80H
 ENDIF
      MOV        H,B
      MOV        L,C
      JMP	CmdWriteFile2
+;--------------------------------------------------------------------------------
+CmdGetDate:
+     MVI        A,2Ah
+     call       StartCommand
+
+     call       SwitchRecvAndWait
+     stax       d ; WeekDay
+     inx        d
+     call       Recv
+     stax       d ; Month
+     inx        d
+     call       Recv
+     stax       d ; Date (1...31)
+     inx        d
+     call       Recv
+     stax       d
+     call       Recv
+EndDateCmd:
+     push       psw
+     call       SwitchSend
+     mvi        a,ERR_OK_CMD
+     call       Send
+     pop        psw
+
+     cpi        ERR_OK_CMD
+     jz         ret0
+     jmp        EndCommand
+
+CmdSetDate:
+     mvi        a,2Bh
+     call       StartCommand
+
+     mvi        a,2 ; WeekDay todo: need to compute from Day,Month,Year
+     inx        d
+     call       Send
+     ldax       d ; Month
+     inx        d
+     call       Send
+     ldax       d ; Day
+     inx        d
+     call       Send
+     ldax       d ; Year
+     call       Send
+     call       SwitchRecvAndWait
+     jmp        EndDateCmd
+
+CmdGetTime:
+     mvi        A,2Ch
+     call       StartCommand
+
+     call       SwitchRecvAndWait
+     stax       d ; Hours (0...23)
+     inx        d
+     call       Recv
+     stax       d ; Minutes (0...59)
+     inx        d
+     call       Recv
+     stax       d ; Seconds (0...59)
+     inx        d
+     call       Recv
+     call       Recv
+     jmp        EndDateCmd
+
+CmdSetTime:
+     mvi        a,2Dh
+     call       StartCommand
+
+     ldax       d ; Hours (0...23)
+     inx        d
+     call       Send
+     ldax       d ; Minutes (0...59)
+     inx        d
+     call       Send
+     ldax       d ; Seconds (0...59)
+     inx        d
+     call       Send
+     mvi        a,100 ; SecondFraction
+     call       Send
+     xra        a ; SubSeconds
+     call       Send
+     call       SwitchRecvAndWait
+     jmp        EndDateCmd
 
 ;----------------------------------------------------------------------------
 ; HL-из, DE-в / A-код ошибки
@@ -648,8 +729,6 @@ RecvBlock1:
   ELSE
      LDA        USER_PORT               ; 13
   ENDIF
-;     NOP
-;     NOP
      STAX	B		        ; 7
      INX	B		        ; 5 = 51
      ENDM
@@ -660,7 +739,7 @@ RecvBlock2:
      JNZ	RecvBlock1
 IFDEF  	USE_PRG_DC
      @SYSREG    0A0H
-     MVI        A,10
+     MVI        A,MEM_HI+10h
      OUT        PPI_PG
      @SYSREG    80H
 ENDIF

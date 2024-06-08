@@ -296,6 +296,7 @@ match:
 ;
 rwmove:
 	xchg
+	di
 	sphl
 	xchg
 @12:	rept	2
@@ -310,6 +311,11 @@ rwmove:
 	jnz	@12	; 10 = 49 / 2 bytes = 25 or (34 * 2 + 15)/4 = 21
 	lhld	stk
 	sphl
+	LDA	NO_EI
+	ORA	A
+	JNZ	@13
+	ei
+@13:
 ;
 ;	data has been moved to/from host buffer
 	lda	wrtype		;write type

@@ -1267,7 +1267,7 @@ endcom:	;end of intrinsic command
 
 
 ;	data areas
-	ds	16	;8 level stack
+	ds	32;16	;8 level stack
 stack:
 
 ;	'submit' file control block
