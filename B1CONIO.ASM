@@ -770,7 +770,7 @@ SetupDMA:
 	@out	DMA+5
 	inx	h
 	mov	a,m
-	ori	40h
+	ori	80h
 	@out	DMA+5
 	mvi	a,0a4h
 	@out	DMA+8
@@ -790,7 +790,7 @@ VT37:
 	endm
 	mvi	a,1Ah
 	@out	DMA+0Bh
-	mvi	a,8
+	mvi	a,20h
 	@out	DMA+8
 	mvi	a,0bh
 	@out	DMA+0Fh
