@@ -1108,7 +1108,7 @@ DVT37:
      MOV   A,C
      @OUT  DMA+3
      MOV   A,B
-     @OUhn m n mT  DMA+3
+     @OUT  DMA+3
      INX   B
 
      POP   PSW

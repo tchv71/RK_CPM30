@@ -120,7 +120,6 @@ CorrTbl:
 	db	0ffh
 
 ;------------------- Console output -----------------------------
-
 PRNT::	POP	H
 	CALL	PUTS
 	pchl
@@ -139,16 +138,45 @@ CONOUT:	PUSH	H
 	PUSH	B
 	PUSH	D
 	PUSH	PSW
+IFNDEF	VDP9918
 	LDA	ViewMode
 	;STA	SCR_BUFF
 IFNDEF	RK60K
 	@out	PALM_CNTRL
 ENDIF
+ENDIF
 	MOV	A,C
+IFNDEF	VDP9918
 	ANI	7FH
+ENDIF
+IFDEF	VDP9918
+	PUSH	PSW
+	XCHG
+	LHLD	CURADR
+	XCHG
+pnc02:
+	MOV	B,D
+	MOV	C,E
+	CALL	T_SetAddrWrite
+	LDA	CURSYM
+	OUT	VDP
+	POP	PSW
+ENDIF
 	LHLD	CHPNT
 	CALL	OUTC
 	SHLD	CHPNT
+IFDEF	VDP9918
+pnc01:	LHLD	CHPNT
+	MOV	B,H
+	MOV	C,L
+	CALL	T_SetAddrRead
+	IN	VDP
+	STA	CURSYM
+	CALL	T_SetAddrWrite
+	MVI	A, 255 ; Cursor
+	OUT	VDP
+	SHLD	CURADR
+ENDIF
 	lhld	CURX
 	call	GOTOXY
 	POP	PSW
@@ -194,12 +222,42 @@ ENDIF
 	JZ	INSLIN
 	DCR	A
 	RNZ
-; Delete line contains the cursor
+; Delete line contained the cursor
 DELLIN:	PUSH	H
 	LHLD	STRADR
+DL01:
 	MOV	D,H
 	MOV	E,L
 	CALL	NXT_S
+IFDEF	VDP9918
+	PUSH	H
+	PUSH	D
+
+	PUSH	D
+	XCHG
+	LXI	H,STRBUF
+	MVI	B,PHYS_W
+	PUSH	H
+	CALL	T_ShAddrReadBytes
+	POP	H
+	POP	D
+	MVI	B, PHYS_W
+	CALL	T_ShAddrWriteBytes
+	POP	D
+	POP	H
+	MOV	A,H
+	CPI	high(ENDSCR)
+	JNZ	DL01
+	MOV	A,L
+	CPI	low(ENDSCR)
+	JNZ	DL01
+	XRA	A
+	LXI	B,PHYS_W
+	CALL	T_Fill
+
+	POP	H
+	RET
+ELSE
 DL0:	MOV	A,M
 	STAX	D
 	INX	H
@@ -212,10 +270,38 @@ DL0:	MOV	A,M
 	JNZ	DL0
 	POP	H
 	RET
+ENDIF
 
 ; INSERT LINE UNDER CURSOR
 INSLIN:	PUSH	H
 	LHLD	STRADR
+IFDEF	VDP9918
+IL01:	MOV	D,H
+	MOV	E,L
+	CALL	NXT_S
+	PUSH	H
+	PUSH	D
+	PUSH	H
+	LXI	H,STRBUF
+	MVI	B,PHYS_W
+	CALL	T_ShAddrReadBytes
+	POP	D
+	LXI	H,STRBUF
+	MVI	B, PHYS_W
+	CALL	T_ShAddrWriteBytes
+	POP	D
+	POP	H
+	CPI	high(ENDSCR)
+	JNZ	IL01
+	MOV	A,L
+	CPI	low(ENDSCR)
+	JNZ	IL01
+	XRA	A
+	LXI	B,PHYS_W
+	CALL	T_Fill
+	POP	H
+	RET
+ELSE
 	LXI	D,ENDSCR
 	LXI	B,ENDSCR-PHYS_W
 CPY:	DCX	B
@@ -236,14 +322,22 @@ FILL:	MVI	M,0
 	JNZ	FILL
 	POP	H
 	RET
+ENDIF
 
 
 ; DELETE TO END OF LINE
 DELEOL:	PUSH	H
 	LHLD	CHPNT
 	LDA	CURX
+IFNDEF	VDP9918
 	JMP	FILL
-
+ELSE
+	MOV	C,A
+	XRA	A
+	MOV	B,A
+	XCHG
+	JMP	T_Fill
+ENDIF
 
 @@@:	MOV	A,B
 	CPI	@ESC
@@ -271,10 +365,17 @@ ELSE
 	CPI	1FH
 	JZ	CLS
 ENDIF
-	CPI	1FH
-	JZ	CLS
 PutcNoCtrl:
+IFDEF	VDP9918
+	PUSH	PSW
+	MOV	B,H
+	MOV	C,L
+	CALL	T_SetAddrWrite
+	POP	PSW
+	OUT	VDP
+ELSE
 	MOV	M,A
+ENDIF
 	INX	H
 	LDA	CURX
 	DCR	A
@@ -362,7 +463,14 @@ BELL:	PUSH	H
 	POP	H
 	RET
 
-SCRUP:	LHLD	STRADR
+SCRUP:
+IFDEF	VDP9918
+	LHLD	STRADR
+	PUSH	H
+	LHLD	BEGSCR
+	JMP	DL01
+ENDIF
+	LHLD	STRADR
 
 SCROLL:	PUSH	H
 	LHLD	BEGSCR
@@ -483,12 +591,21 @@ DWN0:	RET
 	SHLD	STRADR
 	XCHG
 	RET
-
+IFDEF	VDP9918
+SCRLL:	JMP	SCRUP
+ELSE
 SCRLL:	LHLD	CHPNT
 	JMP	SCROLL
+ENDIF
 NO_EI:	DB	1
 
 CLS:	CALL	@HOME
+IFDEF	VDP9918
+	LXI	D,0
+	LXI	B, SCR_SIZE
+	XRA	A
+	JMP	T_Fill
+ELSE
 IF 1
 	DI
 	PUSH	H
@@ -532,6 +649,7 @@ CLS1:	MVI	M,0
 	POP	H
 	RET
 ENDIF
+ENDIF
 
 @HOME:	LHLD	BEGSCR
 	SHLD	STRADR
@@ -551,7 +669,11 @@ NXT_S:	PUSH	B
 ;*********** 8275 chip dependent features ****************
 
 ; Set CURSOR to position  HL : (Y,X)
-GOTOXY:	MVI	A,80H	; Cursor move command
+GOTOXY:
+IFDEF	VDP9918
+	RET
+ELSE
+	MVI	A,80H	; Cursor move command
 	@OUT	DISP+1
 
 	MOV	B,L
@@ -566,6 +688,7 @@ GOTOXY:	MVI	A,80H	; Cursor move command
 	ADI	FirstStr
 	@OUT	DISP
 	RET
+ENDIF
 
 ;EXTRN	Disp_PB
 
@@ -576,6 +699,9 @@ Init_IRQ:
 	shld	39h
 	mvi	a,0c3h
 	sta	38h
+IFDEF VDP9918
+	RET
+ENDIF
 	LXI	d,TimeBuf
 	push	d
 	mvi	c,2ch
@@ -601,6 +727,8 @@ SetClock:
 	RET
 
 Irq_Handler:
+	EI
+	RET
 	PUSH	PSW
 	@in	DISP+1
 	PUSH	H
@@ -726,6 +854,18 @@ IncPos:
 
 ; Set a screen mode according to Disp_PB
 SETSCR::
+IFDEF	VDP9918
+	CALL	T_InitialiseText80
+SetupCursor:
+	LXI	B, T_T80_VRAM_PATT_ADDRESS + 255 * 8
+	CALL	T_SetAddrWrite
+	MVI	A, 255 - 3
+	MVI	B, 8
+sc01:	OUT	VDP
+	DCR	B
+	JNZ	sc01
+	RET
+ELSE
 	DI
 	PUSH	H
 	PUSH	B
@@ -752,7 +892,6 @@ SETSCR::
 	JZ	@wait_RVV
 
 ;*** Load 8257 controller ***
-SetupDMA:
 	;DI
 	@in	DMA+0Fh
 	inr	a
@@ -802,6 +941,7 @@ END_DISP:
 	RNZ
 	EI
 	RET
+ENDIF
 
 ; User defined window coordinates
 BEGSCR:	DW	VRAM
@@ -816,5 +956,12 @@ CHPNT:	DW	VRAM	; Current position in screen buffer
 CURX:	DB	SCR_W	; Current cursor location ( from DOWN-RIGHT corner)
 CURY:	DB	SCR_H
 STRADR:	DW	VRAM	; Start of current line
+IFDEF	VDP9918
+CURADR:	DW	VRAM
+CURSYM:	DB	0
+ENDIF
+STRBUF:	DS	PHYS_W
+
+
 ;	end
 

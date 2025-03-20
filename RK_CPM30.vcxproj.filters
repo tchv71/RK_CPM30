@@ -96,5 +96,11 @@
     <None Include="DEBLOCK.ASM">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="tmsfont.asm">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="9918.asm">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>

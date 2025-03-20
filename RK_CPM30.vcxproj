@@ -234,6 +234,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="82XX.MAC" />
+    <None Include="9918.asm" />
     <None Include="B0DISK.MAC" />
     <None Include="b0FlpDmy.asm" />
     <None Include="B0FLPDSK.ASM" />
@@ -260,6 +261,7 @@
     <None Include="RkConfigPalmiraCPM.mac" />
     <None Include="SCREEN.MAC" />
     <None Include="sdbios.asm" />
+    <None Include="tmsfont.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

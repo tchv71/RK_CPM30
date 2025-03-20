@@ -34,6 +34,7 @@ PPI3	equ	050h;  8255 third	   	  *
 DISP	equ	020h;  8275 display adapter	  *
 DMA	equ	030h;  8257 DMA chip	    	  *
 PSG1	equ	040h;  8253 first	          *
+VDP	equ	098h;  TMS9918 VDP
 PALM_CNTRL equ	0c0h;  Palmira control byte       *
 ;**************************************************
 ELSE

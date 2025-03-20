@@ -167,9 +167,15 @@ BOOT:
 	CALL	DskInit;##
 	;CALL	SETSCR
 	CALL	SAV_SYS;##
+IFDEF	VDP9918
+	CALL	T_Reset
+ENDIF
 	CALL	SETSCR
 	CALL	PRNT;##
-	DB	1FH,	'CP/M-80 vers. 2.2'
+IFNDEF	VDP9918
+	DB	1FH
+ENDIF
+	DB	'CP/M-80 vers. 2.2'
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
 	DB	0DH,0AH,'BIOS vers. 3.2      (c) TCHV,1991-92'
 	DB	",2023", 0DH, 0AH
