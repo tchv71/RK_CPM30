@@ -45,6 +45,7 @@ T_R0_MODE_GR_II		EQU	02
 T_R0_MODE_MULTICOLOR	EQU	00
 T_R0_MODE_TEXT		EQU	00
 T_R0_MODE_TEXT80	EQU	04
+T_R0_MODE_TEXT8_80	EQU	80h
 T_R0_EXT_VDP_ENABLE	EQU	01
 T_R0_EXT_VDP_DISABLE	EQU	00
 
@@ -71,7 +72,7 @@ T_DEF_VRAM_SPR_PATT_ADDRESS	EQU	1800h
 
 T_T80_VRAM_COLOR_ADDRESS	EQU	0A00h
 T_T80_VRAM_NAME_ADDRESS		EQU	0000h
-T_T80_VRAM_PATT_ADDRESS		EQU	1000h
+T_T80_VRAM_PATT_ADDRESS		EQU	2000h
 
 
 VDP	EQU	98H
@@ -238,14 +239,8 @@ T_StrOut:
 
 T_InitialiseText80:
 	;CALL	T_Reset
+	PUSH	PSW
 
-	LXI	B, T_T80_VRAM_PATT_ADDRESS ; load font from address in bc
-	CALL	T_SetAddrWrite
-
-	LXI	H, tmsFont
-	LXI	D, tmsFontEnd - tmsFont ; tmsFontBytes
-	CALL	T_WriteBytes
-	; fallthrough to TmsInitNonBitmap
 
 ; non-bitmap color and pattern table configuration
 	MVI	B, T_REG_COLOR_TABLE
@@ -259,18 +254,35 @@ T_InitialiseText80:
 
 	; set up name table address (register = address / 400H)
 	MVI	B, T_REG_NAME_TABLE
-	MVI	C, (T_T80_VRAM_NAME_ADDRESS / 400h) AND 7Ch OR 3 
+	MVI	C, (T_T80_VRAM_NAME_ADDRESS / 400h) AND 0fh;7Ch OR 3 
 	CALL	T_WriteRegValue
 
-	MVI	B, T_REG_0
-	MVI	C, T_R0_EXT_VDP_DISABLE OR T_R0_MODE_TEXT80
+	LXI	B, T_T80_VRAM_PATT_ADDRESS ; load font from address in bc
+	CALL	T_SetAddrWrite
+
+	POP	PSW
+	CPI	80H
+	JZ	font16
+	LXI	H, tmsFont8
+	LXI	D, tmsFont8End - tmsFont8
+	CALL	T_WriteBytes
+
+	LXI	B, (T_REG_0 SHL 8) OR T_R0_EXT_VDP_DISABLE OR T_R0_MODE_TEXT80
+	CALL	T_WriteRegValue
+	JMP	Reg0Ok
+
+font16:
+	LXI	H, tmsFont
+	LXI	D, tmsFontEnd - tmsFont ; tmsFontBytes
+	CALL	T_WriteBytes
+
+	LXI	B, (T_REG_0 SHL 8) OR T_R0_EXT_VDP_DISABLE OR T_R0_MODE_TEXT80 OR T_R0_MODE_TEXT8_80
 	CALL	T_WriteRegValue
 
-	MVI	B, T_REG_1
-	MVI	C, T_R1_MODE_TEXT OR T_R1_DISP_ACTIVE OR T_R1_INT_ENABLE
+reg0ok:
+	LXI	B, (T_REG_1 SHL 8) OR T_R1_MODE_TEXT OR T_R1_DISP_ACTIVE OR T_R1_INT_ENABLE
 	CALL	T_WriteRegValue
 
-	MVI	B, T_REG_FG_BG_COLOR
-	MVI	C, T_DK_BLUE OR (T_WHITE SHL 4)
+	LXI	B, (T_REG_FG_BG_COLOR SHL 8) OR T_DK_BLUE OR (T_WHITE SHL 4)
 	JMP	T_WriteRegValue
 

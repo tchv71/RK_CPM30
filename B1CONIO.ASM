@@ -7,10 +7,11 @@
 ; and 8257 DMA chip
 
 CONVER::
-	DB	10,13,'Console I/O        V3.0 Healh/Zenith'
+	DB	10,13,'Console I/O        V3.1 Healh/Zenith'
 IFDEF	CONSOLE80
 	DB	' (80 symbols width)'
 ENDIF
+	DB	' - 31-mar-2025'
 	DB	0
 
 ROBOTRON	Equ	1
@@ -57,12 +58,25 @@ ChangeViewMode:
 	mov	a,m
 	shld	ViewPtr
 	pop	h
+IFDEF	VDP9918
+	cpi	0C0h
+	JNZ	cvm01
+	MVI	A,80h
+	JMP	cvm02
+cvm01:	CPI	80H
+	RNZ
+	XRA	A
+cvm02:
+	CALL	SETSCR2
+	JMP	CONIN
+ELSE
 	sta	ViewMode
 	;sta	SCR_BUFF
 IFNDEF	RK60K
 	@out	PALM_CNTRL
 ENDIF
 	jmp	CONIN
+ENDIF
 
 ViewPtr: dw	ViewTbl
 ViewTbl: db	0c0h,80h,0 ; 84h,85h,80h,0 ; ,81h,0 - Not necesarry
@@ -855,15 +869,29 @@ IncPos:
 ; Set a screen mode according to Disp_PB
 SETSCR::
 IFDEF	VDP9918
+	MVI	A,80H
+SETSCR2:
+	PUSH	PSW
 	CALL	T_InitialiseText80
+	POP	PSW
 SetupCursor:
+	CPI	80h
+	JZ	sc16
 	LXI	B, T_T80_VRAM_PATT_ADDRESS + 255 * 8
 	CALL	T_SetAddrWrite
 	MVI	A, 255 - 3
 	MVI	B, 8
+	JMP	sc01
+sc16:
+	LXI	B, T_T80_VRAM_PATT_ADDRESS + 255 * 16;8
+	CALL	T_SetAddrWrite
+	MVI	A, 255 - 3
+	MVI	B, 16;8
 sc01:	OUT	VDP
 	DCR	B
 	JNZ	sc01
+	XRA	A
+	@OUT	DISP+1	; Stop displaying
 	RET
 ELSE
 	DI

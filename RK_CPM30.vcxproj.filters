@@ -102,5 +102,8 @@
     <None Include="9918.asm">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="font8x16.asm">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@ include SCREEN.MAC
 
 IFDEF	USE_PRG_DC
 	IFDEF	EXTERNAL_PORTS
-	START_CCP	EQU 0CF00H - 400H ; Palmira with IN/OUT ports
+	START_CCP	EQU 0CF00H - 400H - 1000h ; Palmira with IN/OUT ports
 	ELSE
 	START_CCP	EQU 0CA00h - 400H ; Palmira with ports in F800-FFFF
 	ENDIF
@@ -34,8 +34,12 @@ include B1CONIO.ASM
 IFDEF VDP9918
 include 9918.asm
 tmsFont:
-include fontMsx.asm;tmsfont.asm
+include font8x16.asm
 tmsFontEnd:
+tmsFont8:
+include fontMsx.asm
+tmsFont8End:
+
 ENDIF
 include B1DISPB.ASM
 include B1LSTAUX.ASM
@@ -50,7 +54,7 @@ ENDIF
 include DEBLOCK.ASM
 BIOS_END:
 IFDEF VDP9918
-IF	BIOS_END GT 0FF80h OR BIOS_END LT 1000H
+IF	BIOS_END GT 0FFF0h OR BIOS_END LT 1000H
 	ERROR BIOS DOES NOT FIT
 ENDIF
 ELSE
