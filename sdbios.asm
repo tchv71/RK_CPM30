@@ -6,10 +6,12 @@
 ;----------------------------------------------------------------------------
 ; Использовать DMA для обмена с SD-картой (требует специальной прошивки контроллера)
 USE_DMA         EQU 1
+CHANNEL0        EQU 1
+
 ;INIT_VIDEO      EQU SETSCR;0F82DH
-USER_PORT       EQU PPI2    ; Адрес КР580ВВ55
 ;INIT_STACK      EQU 0B6CFh
 IFNDEF USE_DMA
+USER_PORT       EQU PPI2    ; Адрес КР580ВВ55
 SEND_MODE       EQU 10000000b ; Режим передачи (1 0 0 A СH 0 B CL)
 RECV_MODE       EQU 10010000b ; Режим приема (1 0 0 A СH 0 B CL)
 ENDIF
@@ -1069,17 +1071,34 @@ SET_DMAW:
      JZ     DVT37
      MVI    A,0F4H
      @OUT   DMA+8
+
      MOV    A,E
+IFDEF CHANNEL0
+     @OUT   DMA
+     MOV    A,D
+     @OUT   DMA
+ELSE
      @OUT   DMA+2
      MOV    A,D
      @OUT   DMA+2
+ENDIF
      DCX    B
      MOV    A,C
+IFDEF CHANNEL0
+     @OUT   DMA+1
+     MOV    A,B
+     @OUT   DMA+1
+ELSE
      @OUT   DMA+3
      MOV    A,B
      @OUT   DMA+3
+ENDIF
      INX    B
+IFDEF CHANNEL0
+     MVI    A,0F5H
+ELSE
      MVI    A,0F6H
+ENDIF
      @OUT   DMA+8
 WD01:
      LDA    NO_EI
@@ -1088,7 +1107,11 @@ WD01:
      EI
 WAIT_DMA:
      @IN    DMA+8
+IFDEF CHANNEL0
+     ANI   1
+ELSE
      ANI   2
+ENDIF
      JZ    WAIT_DMA
      RET
 DVT37:
@@ -1097,18 +1120,33 @@ DVT37:
      ANI   3Fh
      MOV   B,A
      @OUT  DMA+0Ch
+IFDEF CHANNEL0
+     MVI   A,4 ; Stop channel 0
+     @OUT  DMA+0Ah
+     MOV   A,E
+     @out  DMA
+     MOV   A,D
+     @OUT  DMA
+ELSE
      MVI   A,5 ; Stop channel 1
      @OUT  DMA+0Ah
-
      MOV   A,E
      @out  DMA+2
      MOV   A,D
      @OUT  DMA+2
+ENDIF
      DCX   B
+IFDEF CHANNEL0
+     MOV   A,C
+     @OUT  DMA+1
+     MOV   A,B
+     @OUT  DMA+1
+ELSE
      MOV   A,C
      @OUT  DMA+3
      MOV   A,B
      @OUT  DMA+3
+ENDIF
      INX   B
 
      POP   PSW
@@ -1117,11 +1155,17 @@ DVT37:
      RRC
      RRC
      RRC
+IFNDEF CHANNEL0
      ORI   1
+ENDIF
      @OUT  DMA+0Bh
      MVI   A,20h
      @OUT  DMA+8
+IFDEF CHANNEL0
+     XRA   A
+ELSE
      MVI   A,1 ; Start channel 1
+ENDIF
      @OUT  DMA+0Ah
      JMP   WD01
 

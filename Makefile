@@ -4,7 +4,7 @@ ASMDEP=Cpm.ASM CCP.ASM BDOS.ASM B1MAIN.ASM B2DISK.ASM FDCNTR.ASM B1CONIO.ASM B1D
 M80PATH=D:/M80
 
 
-ALL:	CPM/CPM.rkl CPM/CPM_P.rkl
+ALL:	CPM/CPM4.rkl
 
 CPM6.REL: $(ASMDEP)
 	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
@@ -40,8 +40,8 @@ _Rk60k: RkConfig60k.mac
 	copy /b RkConfigPalmiraCPM.mac +,,
 	copy /b RkConfigPalmira.mac +,,
 
-CPM/CPM.rkl: _palmiraCPM CPMPC.BIN
-	../makerk/Release/makerk.exe 100 CPMPC.BIN $@
+CPM/CPM4.rkl: _palmiraCPM CPMPC.BIN
+	../makerk/Release/makerk.exe 100 CPMPC.BIN CPM/CPM4.rkl
 
 CPM/CPM_P.rkl: _palmira CPMP.BIN
 	../makerk/Release/makerk.exe 100 CPMP.BIN $@

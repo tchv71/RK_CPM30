@@ -6,6 +6,7 @@
 ?Ctrl	equ	40h
 ?Shift	equ	20h
 REP_VAL	equ	50
+RusLatLED equ	8
 
 IFNDEF	PPI_ADR
 ;EXTRN	PPI_ADR
@@ -17,11 +18,34 @@ GETCHR:
 	PUSH	D
 	PUSH	B
 	CALL	GTC
+	CALL	MODRUS
 	POP	B
 	POP	D
 	POP	H
 	RET
-
+MODRUS:
+	CPI	7FH
+	RZ
+	MOV	B,A
+	@in	PPI+2
+	MOV	C,A
+	ANI	RusLatLED
+	MOV	A,B
+	JZ	EngTransl
+	CPI	40H
+	RC
+	ADI	80H
+	MOV	B,A
+	LDA	@SHFT
+	ANA	C
+	MOV	A,B
+	RNZ
+	ADI	20H
+	RNC
+	CPI	255
+	RNZ
+	SUI	20H
+	RET
 ; Get keyboard status A=0 - not pressed; A=0FFh - key pressed
 GETST:
 	MVI	A,0
@@ -113,7 +137,7 @@ RP01:	CALL	MDEL
 ??RUS:	CPI	0FEH
 	RNZ
 	@in	PPI+2
-	XRI	8
+	XRI	RusLatLED
 	@out	PPI+2
 	JMP	GTC
 
@@ -343,19 +367,48 @@ MODCHR:	MOV	E,A
 	JNC	MOD4
 	CPI	3CH
 	JNC	MOD3
+	;CPI	32H
+	;JZ	MOD3
 MOD4:	@in	PPI+2
 	MOV	B,A
 	LDA	@CTRL
 	ANA	B
 	JZ	SCTRL
-	@in	PPI+2
-	ANI	8
-	JNZ	SHIFT0
-	@in	PPI+2
-	MOV	B,A
+	MOV	A,B
+	ANI	RusLatLED
+	JNZ	RusLatActive
 	LDA	@SHFT
 	ANA	B
-	JZ	@SHIFT
+	JNZ	NoShiftEng
+@SHIFT:	@in	PPI+2
+	ANI	RusLatLED
+	JNZ	@SHRUS
+SH3:	MOV	A,E
+	CPI	40H
+	RNC
+SH5:
+	MVI	A,RusLatLED
+	ANA	B
+	MOV	A,E
+	JZ	NoJcukTransl
+@SHRUS:
+	MOV	A,E
+	CALL	QwCukTransl
+	MOV	E,A
+	MVI	A,RusLatLED
+	ANA	B
+	MOV	A,E
+	RNZ
+NoJcukTransl:
+	CPI	40H
+	JC	SB
+	CPI	07Fh
+	RZ
+SB:	SUI	10H
+	MOV	E,A
+	CPI	20H
+	RNZ
+	MVI	E,5Fh
 	RET
 
 MOD3:	@in	PPI+2
@@ -363,7 +416,10 @@ MOD3:	@in	PPI+2
 	LDA	@SHFT
 	ANA	B
 	JNZ	SH3
-	RET
+	MOV	A,B
+	ANI	RusLatLED
+	RZ
+	JMP	RLA01
 
 SCTRL:	MOV	A,E
 	CPI	40H
@@ -372,42 +428,49 @@ SCTRL:	MOV	A,E
 	MOV	E,A
 	RET
 
-SHIFT0:	@in	PPI+2
-	MOV	B,A
+; RUS is activated
+RusLatActive:
+	LDA	@SHFT
+	ANA	B
+	JZ	@SHRUS
+RLA01:	
+	MOV	A,E
+	CALL	QwCukTransl
+	MOV	E,A
+	RET
+EngTransl:
+	LXI	H,ENGKEY
+	JMP	QWC01
+QwCukTransl:
+	LXI	H,RUSKEY
+QWC01:
+	MOV	D, M
+	INR	D
+	DCR	D
+	RZ
+	CMP	M
+	INX	H
+	INX	H
+	JNZ	QWC01
+	DCX	H
+	MOV	A,M
+	ORA	A
+	RET
+
+NoShiftEng:
+	MOV	A,E
+	CPI	40h
+	RC
+	CPI	7Fh
+	RZ
 	LDA	@SHFT
 	ANA	B
 	JZ	SH5
-	MOV	A,E
-	CPI	40H
-	RC
-	CPI	07Fh
-	RZ
-	ADI	20H
+	MVI	A,20H
+	ADD	E
 	MOV	E,A
 	RET
-
-@SHIFT:	@in	PPI+2
-	ANI	8
-	RNZ
-SH3:	MOV	A,E
-	CPI	40H
-	JC	SH5
-	CPI	7Fh
-	jz	SH11
-	ADI	20H
-	JMP	SH1
-SH5:	MOV	A,E
-	CPI	40H
-	JC	SB
-SH1:	MOV	E,A
-	RET
-SB:	SUI	10H
-	CPI	20H
-	JNZ	SH1
-SH11:
-	MVI	E,5Fh
-	RET
-
+	
 
 KEYBRD:	DB	0CH,1FH,1BH,0,1,2,3,4
 	DB	9,0AH,0DH
@@ -418,6 +481,13 @@ KEYBRD:	DB	0CH,1FH,1BH,0,1,2,3,4
 ;	DB	'0123456789:;<=>?'
 ;	DB	'@ABCDEFGHIJKLMNO'
 ;	DB	'PQRSTUVWXYZ[\]^ '
+RUSKEY:
+	DB 'QJ','WC','EU','RK','TE','YN','UG','I[','O]','PZ','[H',']_'
+	DB 'AF','SY','DW','FA','GP','HR','JO','KL','LD',';V',':V','2\'
+	DB 'ZQ','X^','CC','VM','BI','NT','MX','<B','>@',',B','.@',0,0
+
+ENGKEY:
+	DB "`@",'@`','^~','~^','\|','|\','{[','}]','[{',']}',27h,22h,22h,27h,0
 
 
 @RUS:	DB	80H
@@ -435,5 +505,4 @@ ET2:	DS	10
 IFNDEF	noend
 ;	END
 ENDIF
-
 

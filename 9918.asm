@@ -152,18 +152,19 @@ T_ReadBytes:
 	RET
 
 T_ShAddrReadBytes:
+	PUSH	H
 	PUSH	B
-	MOV	B,D
-	MOV	C,E
-	CALL	T_SetAddrRead
-	POP	B
-
+	XCHG
+	CALL	T_SetAddrReadHL
+	XCHG
 T_ShortReadBytes:
 	IN	VDP
 	MOV	M,A
 	INX	H
 	DCR	B
 	JNZ	T_ShortReadBytes
+	POP	B
+	POP	H
 	RET
 
 T_ReadStatus:
@@ -182,6 +183,26 @@ T_WriteRegValue:
 	OUT	VDP+1
 	EI
 	RET
+
+T_SetAddrWriteHL:
+	DI
+	MOV	A,L
+	OUT	VDP+1
+	MOV	A,H
+	ORI	40H
+	OUT	VDP+1
+	EI
+	RET
+
+T_SetAddrReadHL:
+	DI
+	MOV	A,L
+	OUT	VDP+1
+	MOV	A,H
+	OUT	VDP+1
+	EI
+	RET
+
 
 T_SetAddrWrite:
 	MOV	A,B

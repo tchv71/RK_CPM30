@@ -428,7 +428,7 @@ readnx:
 	push	h
 readn0:
 	call	_conin		;next char in A
-	ani	7fh		;mask parity bit
+	;ani	7fh		;mask parity bit
 	pop	h		;reactivate counters
 	pop	b
 	cpi	cr		;end of line?

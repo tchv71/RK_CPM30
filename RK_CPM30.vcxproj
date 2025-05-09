@@ -195,7 +195,7 @@
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPM|Win32'">
-    <NMakeBuildCommandLine>make CPM/CPM.rkl</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>make CPM/CPM4.rkl</NMakeBuildCommandLine>
     <NMakeOutput>CPMPC.BIN</NMakeOutput>
     <NMakeCleanCommandLine>make clean</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
