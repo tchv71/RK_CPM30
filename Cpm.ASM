@@ -7,7 +7,7 @@ include SCREEN.MAC
 
 IFDEF	USE_PRG_DC
 	IFDEF	EXTERNAL_PORTS
-	START_CCP	EQU 0CF00H - 400H - 1000h ; Palmira with IN/OUT ports
+	START_CCP	EQU 0CF00H - 400H - 1100h ; Palmira with IN/OUT ports
 	ELSE
 	START_CCP	EQU 0CA00h - 400H ; Palmira with ports in F800-FFFF
 	ENDIF

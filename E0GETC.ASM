@@ -26,26 +26,94 @@ GETCHR:
 MODRUS:
 	CPI	7FH
 	RZ
-	MOV	B,A
-	@in	PPI+2
 	MOV	C,A
+	@in	PPI+2
+	MOV	B,A
 	ANI	RusLatLED
-	MOV	A,B
+	MOV	A,C
 	JZ	EngTransl
+	MVI	A,?Shift
+	ANA	B
+	JZ	MR07
+	MOV	A,C
+	CPI	'@'
+	MVI	A,'"'
+	RZ
+MR07:
+	MOV	A,C
+	CPI	'^'
+	MVI	A,':'
+	RZ
+	MOV	A,C
+	CPI	'^'+20h
+	JNZ	MR08
+	SUI	20H
+	MOV	C,A
+MR08:
+	CPI	'_'+80h
+	MVI	A,'_'
+	RZ
+	MVI	A,?Shift
+	ANA	B
+	JNZ	MR05
+	MOV	A,C
+	CPI	'\'+80h
+	MVI	A,'/'
+	RZ
+	MOV	A,C
+MR02:	CPI	'.'
+	MVI	A,','
+	RZ
+MR05:
+	MOV	A,C
+	CPI	'0'
+	JC	MR04
+	CPI	'9'+1
+	JNC	MR04
+	LXI	H,NUMSHIFT
+	SUI	'0'
+	MOV	E,A
+	MVI	D,0
+	DAD	D
+
+	MVI	A,?Shift
+	ANA	B
+	MOV	A,C
+	RNZ
+	MOV	A,M
+	RET
+MR04:
+	CPI	'@'+20h
+	JNZ	$+5
+	SUI	20H
+	LXI	H,EK01
+	CALL	QWC01
+	JNZ	MR01
 	CPI	40H
 	RC
+MR01:
+	CPI	60H
+	JNC	MR06
 	ADI	80H
-	MOV	B,A
-	LDA	@SHFT
-	ANA	C
-	MOV	A,B
+	CPI	0DFh
+	RZ
+	MOV	C,A
+	MVI	A,?Shift
+	ANA	B
+	MOV	A,C
 	RNZ
 	ADI	20H
-	RNC
-	CPI	255
-	RNZ
-	SUI	20H
 	RET
+MR06:
+	ADI	60H
+	MOV	C,A
+	MVI	A,?Shift
+	ANA	B
+	MOV	A,C
+	RZ
+	ADI	20H
+	RET
+
 ; Get keyboard status A=0 - not pressed; A=0FFh - key pressed
 GETST:
 	MVI	A,0
@@ -362,64 +430,98 @@ FND02:	MOV	E,A
 	INX	H
 	RET
 
-MODCHR:	MOV	E,A
+MODCHR:
+	@in	PPI+2
+	MOV	B,A
+	ANI	RusLatLED
+	JNZ	RusLatActive
+MOD01:
+	MOV	A,E
 	CPI	40H
 	JNC	MOD4
 	CPI	3CH
 	JNC	MOD3
-	;CPI	32H
-	;JZ	MOD3
-MOD4:	@in	PPI+2
-	MOV	B,A
-	LDA	@CTRL
+MOD4:
+	MVI	A,?Ctrl
 	ANA	B
 	JZ	SCTRL
-	MOV	A,B
-	ANI	RusLatLED
-	JNZ	RusLatActive
-	LDA	@SHFT
+	MVI	A,?Shift
 	ANA	B
 	JNZ	NoShiftEng
-@SHIFT:	@in	PPI+2
-	ANI	RusLatLED
-	JNZ	@SHRUS
-SH3:	MOV	A,E
+@SHIFT:
+SH3:
+	MOV	A,E
+	CPI	7Fh
+	JNZ	SH02
+	SUI	20H
+	MOV	E,A
+	RET
+SH02:
 	CPI	40H
 	RNC
-SH5:
-	MVI	A,RusLatLED
-	ANA	B
-	MOV	A,E
-	JZ	NoJcukTransl
+	JMP	NoJcukTransl
 @SHRUS:
 	MOV	A,E
-	CALL	QwCukTransl
+	CPI	7Fh
+	JNZ	SHR02
+	ADI	60H
 	MOV	E,A
-	MVI	A,RusLatLED
-	ANA	B
-	MOV	A,E
-	RNZ
+	RET
+SHR02:
+	CPI	':'
+	MVI	E,'8'
+	RZ
+	CPI	'6'
+	MVI	E,'?'
+	RZ
+	CPI	';'
+	MVI	E,'+'
+	RZ
+	MOV	E,A
+	CALL	CheckNoShift
+	JZ	RLA01
+
+	CPI	40h
+	JNC	RLA01
+SHR04:
+	CALL	QwCukTransl
 NoJcukTransl:
-	CPI	40H
-	JC	SB
 	CPI	07Fh
 	RZ
-SB:	SUI	10H
+	SUI	10H
 	MOV	E,A
 	CPI	20H
 	RNZ
 	MVI	E,5Fh
 	RET
 
-MOD3:	@in	PPI+2
-	MOV	B,A
-	LDA	@SHFT
+CheckNoShift:
+	CPI	'2'
+	RZ
+	CPI	'3'
+	RZ
+	CPI	'4'
+	RZ
+	CPI	'7'
+	RZ
+	CPI	'<'
+	RZ
+	CPI	'>'
+	RZ
+	CPI	'?'
+	RZ
+	CPI	'='
+	RET
+
+MOD3:
+	MVI	A,?Shift
 	ANA	B
 	JNZ	SH3
 	MOV	A,B
 	ANI	RusLatLED
 	RZ
 	JMP	RLA01
+
 
 SCTRL:	MOV	A,E
 	CPI	40H
@@ -430,23 +532,36 @@ SCTRL:	MOV	A,E
 
 ; RUS is activated
 RusLatActive:
-	LDA	@SHFT
+	MOV	A,E
+	CPI	'@'
+	RZ
+	CPI	'^'
+	RZ
+	MVI	A,?Shift
 	ANA	B
 	JZ	@SHRUS
-RLA01:	
 	MOV	A,E
-	CALL	QwCukTransl
+	CPI	'='
+	MVI	E,'-'
+	RZ
 	MOV	E,A
-	RET
-EngTransl:
-	LXI	H,ENGKEY
-	JMP	QWC01
+MOD40:
+	MVI	A,?Ctrl
+	ANA	B
+	JZ	SCTRL
+	MOV	A,E
+	CPI	'2'
+	RZ
+	CPI	'7'
+	RZ
+RLA01:
+	MOV	A,E
 QwCukTransl:
 	LXI	H,RUSKEY
 QWC01:
 	MOV	D, M
 	INR	D
-	DCR	D
+	;DCR	D
 	RZ
 	CMP	M
 	INX	H
@@ -455,6 +570,7 @@ QWC01:
 	DCX	H
 	MOV	A,M
 	ORA	A
+	MOV	E,A
 	RET
 
 NoShiftEng:
@@ -463,13 +579,13 @@ NoShiftEng:
 	RC
 	CPI	7Fh
 	RZ
-	LDA	@SHFT
-	ANA	B
-	JZ	SH5
 	MVI	A,20H
 	ADD	E
 	MOV	E,A
 	RET
+EngTransl:
+	LXI	H,ENGKEY
+	JMP	QWC01
 	
 
 KEYBRD:	DB	0CH,1FH,1BH,0,1,2,3,4
@@ -483,16 +599,18 @@ KEYBRD:	DB	0CH,1FH,1BH,0,1,2,3,4
 ;	DB	'PQRSTUVWXYZ[\]^ '
 RUSKEY:
 	DB 'QJ','WC','EU','RK','TE','YN','UG','I[','O]','PZ','[H',']_'
-	DB 'AF','SY','DW','FA','GP','HR','JO','KL','LD',';V',':V','2\'
-	DB 'ZQ','X^','CC','VM','BI','NT','MX','<B','>@',',B','.@',0,0
+	DB 'AF','SY','DW','FA','GP','HR','JO','KL','LD',':','V'+20h,';V','\','\'+80H,'2','\'+20h,'7\'
+	DB 'ZQ','X','^'+20h,'CS','VM','BI','NT','MX','>','@'+20h,'.', '@'+20h,'<B',',','B'+20h,'?.',0FFh
 
 ENGKEY:
-	DB "`@",'@`','^~','~^','\|','|\','{[','}]','[{',']}',27h,22h,22h,27h,0
+	DB "`@",'@`','^~','~^','\|','|\','{[','}]','[{',']}',27h,22h,22h,27h,0FFh
+EK01:	
+	27h,'\',22h,'\'-20h,'\'+80H,'\'+80H,0FFh
 
-
+NUMSHIFT:	DB	')!"N;%:?*('
 @RUS:	DB	80H
-@CTRL:	DB	?Ctrl
-@SHFT:	DB	?Shift
+;@CTRL:	DB	?Ctrl
+;@SHFT:	DB	?Shift
 @RD:	DB	0
 
 PNT:	DW	ET1

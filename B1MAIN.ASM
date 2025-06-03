@@ -78,6 +78,7 @@ IF 0
 ENDIF
 	call	DispDate
 
+IF 0
 	push	psw
 	@in	0FFh
 	mvi	a,0C0h
@@ -92,6 +93,7 @@ ENDIF
 	mvi	a,80h
 	@out	0FFh
 	pop	psw
+ENDIF
 	pop	d
 	cpi	2bh
 	jz	SetClock
