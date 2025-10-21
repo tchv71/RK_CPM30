@@ -7,14 +7,14 @@
 ; and 8257 DMA chip
 
 CONVER::
-	DB	10,13,'Console I/O        V3.1 Healh/Zenith'
+	DB	10,13,'Console I/O V3.1 Healh/Zenith'
 IFDEF	CONSOLE80
 	DB	' (80 symbols width)'
 ENDIF
 	DB	' - 31-mar-2025'
 	DB	0
 
-ROBOTRON	Equ	1
+ROBOTRON	Equ	0
 
 ; This module defines following procedures :
 PUBLIC		CON_ST,CONIN,CONOUT

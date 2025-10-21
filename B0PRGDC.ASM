@@ -21,18 +21,19 @@ IFDEF	RK60K
 ENDIF
 
 IFDEF	USE_PRG_DC
+IF 0
 	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)
 	LXI	H,BEGPRO+1
 	LXI	B,00000h
 	MVI	A,15
 	CALL	SETPORT
 	CALL	LOOP01 ; Turn on working mode
-
+ENDIF
 	MVI	A,0;80H ; Start page
 	LXI	D,MAP
 	CALL	PROG_DC
 ENDIF
-	@SYSREG	80h
+	;@SYSREG	80h
 	LXI	H,CCP_START + (B_BASE-C_BASE)
 	LXI	D, B_BASE
 	LXI	B, (BIOS_END-B_BASE)
@@ -45,42 +46,28 @@ IFDEF	EXTERNAL_PORTS
 	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)
 
 	LXI	H,BEGPRO+1
-
-	LXI	B, (4 SHL 8) + PPI
-	XRA	A
+	LXI	D, MAP_PORTS
+PORT_MAP:
+	LDAX	D
+	MOV	C,A
+	INX	D
+	LDAX	D
+	ORA	A
+	JZ	END_PORT_MAP
+	MOV	B,A
+	INX	D
+	LDAX	D
+	INX	D
 	CALL	SETPORT
+	JMP	PORT_MAP
 
-	LXI	B,400h + PPI2
-	MVI	A,1 ; INR	A
-	CALL	SETPORT
-
-	;LXI	B,400h + PPI3
-	;MVI	A,0Eh
-	;CALL	SETPORT
-
-	MVI	A,2
-	OUT	DISP
-	OUT	DISP+1
-
-	LXI	B,1000h + DMA	; DMA
-	MVI	A,7
-	CALL	SETPORT
-
-	MVI	A,6	; PSG
-	LXI	B,400h + PSG1
-	CALL	SETPORT
-
-	MVI	A,11
-	OUT	PALM_CNTRL
-
-	MVI	A,14
-	OUT	VDP
-	OUT	VDP+1
+END_PORT_MAP:
 	@SYSREG	80h
 
 ENDIF
 ENDIF
-
+	CALL	CLS
+	CALL	SETSCR
 	LXI	H,CCP_START
 	LXI	D, C_BASE
 	LXI	B, (B_BASE-C_BASE)
@@ -163,13 +150,23 @@ IFDEF	EXTERNAL_PORTS
 ELSE
 	DB	1,6 ;  8253 first
 	DB	1,0 ;  8255 first
-	DB	1,1 ;  8255 second
+	DB	1,9 ;  8255 second
 	DB	1,2 ;  8275 display adapter
 	DB	1,7 ;  8257 DMA chip
 	DB	1,11;  Palmira control byte
 	DB	2,1dh;
 ENDIF
 
-	DB	0
+MAP_PORTS:
+	DB	PPI,  4, 0
+	DB	PPI2, 4, 1;9;1
+	DB	DISP, 2, 2
+	DB	DMA,  10h, 7
+	DB	PSG1, 4, 6
+	DB	PSG2, 4, 8
+	DB	PALM_CNTRL, 1, 11
+	DB	VDP, 2, 14
+	DB	FT245R, 2, 12
+	DB	0, 0
 ENDIF
 CCP_START:

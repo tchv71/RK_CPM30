@@ -15,7 +15,7 @@ ELSE
 	IFDEF	RK60K
 	START_CCP	EQU 0BC00h - 400H ; RK 60k
 	ELSE
-	START_CCP	EQU  9000h - 400H ; Palmira
+	START_CCP	EQU  9000h - 600H ; Palmira
 	ENDIF
 ENDIF
 
@@ -28,6 +28,8 @@ include CCP.ASM
 include BDOS.ASM
 
 include B1MAIN.ASM
+include B0SD.ASM
+include sdbios.asm
 include B2DISK.ASM
 ;include FDCNTR.ASM
 include B1CONIO.ASM
@@ -46,8 +48,6 @@ include B1LSTAUX.ASM
 ;include B0FLPDSK.ASM
 include B0FlpDmy.ASM
 ;include b0RAMDSK.ASM
-include B0SD.ASM
-include sdbios.asm
 IFDEF OWN_GETC
 include E0GETC.ASM
 ENDIF

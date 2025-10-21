@@ -7,13 +7,13 @@ M80PATH=D:/M80
 ALL:	CPM/CPM4.rkl
 
 CPM6.REL: $(ASMDEP)
-	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
+	$(M80PATH)/M80 '$@,CPM.PRN=Cpm.ASM /I/L'
 
 CPMP.REL: $(ASMDEP)
-	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
+	$(M80PATH)/M80 '$@,CPM.PRN=Cpm.ASM /I/L'
 
 CPMPC.REL: $(ASMDEP)
-	$(M80PATH)/M80 '$@=Cpm.ASM /I/L'
+	$(M80PATH)/M80 '$@,CPM.PRN=Cpm.ASM /I/L'
 
 
 _palmira: RkConfigPalmira.mac
@@ -42,6 +42,7 @@ _Rk60k: RkConfig60k.mac
 
 CPM/CPM4.rkl: _palmiraCPM CPMPC.BIN
 	../makerk/Release/makerk.exe 100 CPMPC.BIN CPM/CPM4.rkl
+	../m80noi/x64/Release/m80noi.exe cpm.prn
 
 CPM/CPM_P.rkl: _palmira CPMP.BIN
 	../makerk/Release/makerk.exe 100 CPMP.BIN $@
