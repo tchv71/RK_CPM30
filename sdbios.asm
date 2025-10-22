@@ -201,6 +201,17 @@ CmdWriteFile1:
 IFDEF USE_DMA
 	CALL	SendBlock
 ELSE
+	MOV	A, M
+	INX	H
+	CALL	Send
+	DCX	D
+	MOV	A, D
+	ORA	E
+	JNZ 	CmdWriteFile1
+
+	JMP	CmdWriteFile2
+
+IF 0
 ;CmdWriteFile1:
 ;     MOV	A, M
 ;     INX	H
@@ -259,6 +270,7 @@ ENDIF
 	MOV	L,C
 ENDIF
 	JMP	CmdWriteFile2
+ENDIF
 ;--------------------------------------------------------------------------------
 CmdGetDate:
 	MVI	A,2Ah
@@ -573,7 +585,32 @@ ELSE
 ;----------------------------------------------------------------------------
 ; Принять DE байт по адресу BC
 ; Портим A
-PPI_PG	EQU	0D0H
+RecvBlock:
+	PUSH	H
+	LXI 	H, USER_PORT+1
+	INR 	D
+	XRA 	A
+	ORA 	E
+	JZ 	RecvBlock2
+RecvBlock1:
+	MVI	A, 20h
+	@out	USER_PORT+1
+	XRA	A
+	@out	USER_PORT+1
+	@in	USER_PORT		; 13
+	STAX	B		        ; 7
+	INX	B		        ; 5
+	DCR	E		        ; 5
+	JNZ	RecvBlock1		; 10 = 54
+RecvBlock2:
+	DCR	D
+	JNZ	RecvBlock1
+	POP	H
+	RET
+
+;PPI_PG	EQU	0D0H 
+
+IF 0
 RecvBlock:
 	PUSH	H
 	;MVI	H,20H
@@ -623,7 +660,7 @@ IFDEF	USE_PRG_DC
 ENDIF
 	POP	H
 	RET
-
+ENDIF
 ;----------------------------------------------------------------------------
 ; Загрузка данных по адресу BC. 
 ; На выходе HL сколько загрузили

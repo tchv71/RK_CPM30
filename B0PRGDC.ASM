@@ -150,7 +150,7 @@ IFDEF	EXTERNAL_PORTS
 ELSE
 	DB	1,6 ;  8253 first
 	DB	1,0 ;  8255 first
-	DB	1,9 ;  8255 second
+	DB	1,1 ;  8255 second
 	DB	1,2 ;  8275 display adapter
 	DB	1,7 ;  8257 DMA chip
 	DB	1,11;  Palmira control byte
@@ -159,7 +159,7 @@ ENDIF
 
 MAP_PORTS:
 	DB	PPI,  4, 0
-	DB	PPI2, 4, 1;9;1
+	DB	PPI2, 4, 9;1
 	DB	DISP, 2, 2
 	DB	DMA,  10h, 7
 	DB	PSG1, 4, 6
