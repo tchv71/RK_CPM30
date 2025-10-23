@@ -6,13 +6,7 @@
 ;----------------------------------------------------------------------------
 ; Use DMA for SD-card (requires special controller's firmware)
 IFDEF USE_PRG_DC
-;USE_DMA	 EQU 1
-ENDIF
-CHANNEL0	EQU 1
-IFDEF CHANNEL0
-DMA_CHANNEL	EQU	0
-ELSE
-DMA_CHANNEL	EQU	1
+USE_DMA	 EQU 1
 ENDIF
 
 ;INIT_VIDEO	EQU SETSCR;0F82DH
@@ -852,16 +846,16 @@ SET_DMAW:
 	@OUT	DMA+8
 
 	MOV	A,E
-	@OUT	DMA + 2 * DMA_CHANNEL
+	@OUT	DMA
 	MOV	A,D
-	@OUT	DMA + 2 * DMA_CHANNEL
+	@OUT	DMA
 	DCX	B
 	MOV	A,C
-	@OUT	DMA + 2 * DMA_CHANNEL + 1
+	@OUT	DMA+1
 	MOV	A,B
-	@OUT	DMA + 2 * DMA_CHANNEL + 1
+	@OUT	DMA+1
 	INX	B
-	MVI	A,0F5H + DMA_CHANNEL
+	MVI	A,0F5H
 	@OUT	DMA+8
 WD01:
 	LDA	NO_EI
@@ -870,7 +864,7 @@ WD01:
 	EI
 WAIT_DMA:
 	@IN	DMA+8
-	ANI	1 SHL DMA_CHANNEL
+	ANI	1
 	JZ	WAIT_DMA
 	RET
 DVT37:
@@ -879,17 +873,17 @@ DVT37:
 	ANI	3Fh
 	MOV	B,A
 	@OUT	DMA+0Ch
-	MVI	A,4 + DMA_CHANNEL ; Stop DMA_CHANNEL
+	MVI	A,4 ; Stop DMA_CHANNEL 0
 	@OUT	DMA+0Ah
 	MOV	A,E
-	@out	DMA + 2 * DMA_CHANNEL
+	@out	DMA
 	MOV	A,D
-	@out	DMA + 2 * DMA_CHANNEL
+	@out	DMA
 	DCX	B
 	MOV	A,C
-	@OUT	DMA + 2 * DMA_CHANNEL + 1
+	@OUT	DMA+1
 	MOV	A,B
-	@OUT	DMA + 2 * DMA_CHANNEL + 1
+	@OUT	DMA+1
 	INX	B
 
 	POP	PSW
