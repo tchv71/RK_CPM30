@@ -158,7 +158,7 @@ DskInit:
 	STA	OLDDSK
 	STA	OLDF40
         ;call	RamD_I
-	call	SD_I
+	;call	SD_I
         jmp	FlpD_I
 
 ;------ SOME CP/M BIOS FUNCTIONS -------

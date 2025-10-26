@@ -203,6 +203,7 @@ ENDIF
 	call	PUTS
 	lxi	h,LSTVER;##
 	call	PUTS
+	CALL	SD_I
 	XRA	A
 	STA	DEF_DSK
 	STA	IO_BYTE
