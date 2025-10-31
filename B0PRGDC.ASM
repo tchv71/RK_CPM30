@@ -40,7 +40,9 @@ ENDIF
 	CALL	CP001
 	MVI	A,1
 	STA	NO_EI
+IFNDEF VDP9918
 	CALL	CLS
+ENDIF
 IFDEF	USE_PRG_DC
 IFDEF	EXTERNAL_PORTS
 	@SYSREG	0C0h ; Turn on external device programming mode (for in/out commands)

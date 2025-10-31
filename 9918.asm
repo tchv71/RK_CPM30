@@ -181,8 +181,7 @@ T_WriteRegValue:
 	MOV	A,B
 	ORI	80H
 	OUT	VDP+1
-	EI
-	RET
+	JMP	RET_SET_EI
 
 T_SetAddrWriteHL:
 	DI
@@ -191,8 +190,7 @@ T_SetAddrWriteHL:
 	MOV	A,H
 	ORI	40H
 	OUT	VDP+1
-	EI
-	RET
+	JMP	RET_SET_EI
 
 T_SetAddrReadHL:
 	DI
@@ -200,27 +198,7 @@ T_SetAddrReadHL:
 	OUT	VDP+1
 	MOV	A,H
 	OUT	VDP+1
-	EI
-	RET
-
-
-T_SetAddrWrite:
-	MOV	A,B
-	ORI	40h
-	MOV	B,A
-T_SetAddrRead:
-	DI
-	MOV	A,C
-	OUT	VDP+1
-	MOV	A,B
-	OUT	VDP+1
-	EI
-	RET
-
-T_WriteData:
-	MOV	A,C
-	OUT	VDP
-	RET
+	JMP	RET_SET_EI
 
 ; set the address to place text at X/Y coordinate
 ;	H = X
@@ -245,14 +223,30 @@ T_TextPos:
 	DAD	D
 	MOV	B,H
 	MOV	C,L
-	JMP	T_SetAddrWrite
+
+T_SetAddrWrite:
+	MOV	A,B
+	ORI	40h
+	MOV	B,A
+T_SetAddrRead:
+	DI
+	MOV	A,C
+	OUT	VDP+1
+	MOV	A,B
+	OUT	VDP+1
+	JMP	RET_SET_EI
+
+T_WriteData:
+	MOV	A,C
+	OUT	VDP
+	RET
 
 ; copy a null-terminated string to VRAM
 ;	HL = ram source address
 T_StrOut:
 	MOV	A, M
 	ORA	A
-	RZ                              ; return when NULL is encountered
+	RZ				; return when NULL is encountered
 	OUT	VDP
 	INX	H
 	JMP	T_StrOut

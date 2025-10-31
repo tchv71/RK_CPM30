@@ -629,11 +629,7 @@ CLS0:
 	SPHL
 	POP	D
 	POP	H
-	LDA	NO_EI
-	ORA	A
-	RNZ
-	EI
-	RET
+	JMP	RET_SET_EI
 ELSE
 	LDA	YSIZE
 	MOV	B,A
@@ -697,13 +693,17 @@ ENDIF
 
 Init_IRQ:
 	DI
+	.Z80
+	im	1
+	.8080
 	PUSH	H
 	lxi	h,Irq_handler
 	shld	39h
 	mvi	a,0c3h
 	sta	38h
 IFDEF VDP9918
-	RET
+	POP	H
+	JMP	RET_SET_EI
 ENDIF
 	LXI	d,TimeBuf
 	push	d
@@ -726,12 +726,16 @@ SetClock:
 	call	ToBcd
 	mov	m,a
 	POP	H
-	;EI
-	RET
+	JMP	RET_SET_EI
 
 Irq_Handler:
-	EI
-	RET
+IFDEF VDP9918
+	;call	T_ReadStatus
+	PUSH	PSW
+	IN	VDP+1
+	POP	PSW
+	JMP	RET_SET_EI
+ENDIF
 	PUSH	PSW
 	@in	DISP+1
 	PUSH	H
@@ -953,11 +957,7 @@ VT37:
 END_DISP:
 	POP	B
 	POP	H
-	LDA	NO_EI
-	ORA	A
-	RNZ
-	EI
-	RET
+	JMP	RET_SET_EI
 ENDIF
 
 ; User defined window coordinates

@@ -3,14 +3,7 @@
 
 	;.org 07600h-683 ; Last byte should be at 0D5FFh
 				   
-;----------------------------------------------------------------------------
-; Use DMA for SD-card (requires special controller's firmware)
-IFDEF USE_PRG_DC
-USE_DMA	 EQU 1
-ENDIF
 
-;INIT_VIDEO	EQU SETSCR;0F82DH
-;INIT_STACK	EQU 0B6CFh
 IFNDEF USE_DMA
 USER_PORT	EQU PPI2      ; KR580VV55 address
 SEND_MODE	EQU 10000000b ; Send mode (1 0 0 A СH 0 B CL)
@@ -29,7 +22,6 @@ STA_OK_ADDR	EQU	047h ; MC is ready to send loading address
 STA_OK_BLOCK	EQU	04Fh 
 
 ERR_DATETIME	EQU	50H
-;VER_BUF	EQU	BUF
 
 ; IN and OUT MACRO comands
 @in	MACRO	addr
@@ -59,7 +51,7 @@ CmdOpenDelete:
 
 	; Mode
 	MOV	A, D
-	CALL	Send
+	CALL	SendByte
 
 	; File name
 	CALL	SendString
@@ -83,7 +75,7 @@ CmdSeekGetSize:
 
 	; Mode
 	MOV	A, B
-	CALL	Send
+	CALL	SendByte
 
 	; Position
 	CALL	SendWord
@@ -197,7 +189,7 @@ IFDEF USE_DMA
 ELSE
 	MOV	A, M
 	INX	H
-	CALL	Send
+	CALL	SendByte
 	DCX	D
 	MOV	A, D
 	ORA	E
@@ -209,7 +201,7 @@ IF 0
 ;CmdWriteFile1:
 ;     MOV	A, M
 ;     INX	H
-;     CALL	Send
+;     CALL	SendByte
 ;     DCX	D
 ;     MOV	A, D
 ;     ORA	E
@@ -273,20 +265,20 @@ CmdGetDate:
 	call	SwitchRecvAndWait
 	stax	d ; WeekDay
 	inx	d
-	call	Recv
+	call	RecvByte
 	stax	d ; Month
 	inx	d
-	call	Recv
+	call	RecvByte
 	stax	d ; Date (1...31)
 	inx	d
-	call	Recv
+	call	RecvByte
 	stax	d
-	call	Recv
+	call	RecvByte
 EndDateCmd:
 	;push	psw
 	;call	SwitchSend
 	;mvi	a,STA_OK_CMD
-	;call	Send
+	;call	SendByte
 	;pop	psw
 
 	cpi	STA_OK_CMD
@@ -303,15 +295,15 @@ CmdSetDate:
 
 	mvi	a,2 ; WeekDay todo: need to compute from Day,Month,Year
 	inx	d
-	call	Send
+	call	SendByte
 	ldax	d ; Month
 	inx	d
-	call	Send
+	call	SendByte
 	ldax	d ; Day
 	inx	d
-	call	Send
+	call	SendByte
 	ldax	d ; Year
-	call	Send
+	call	SendByte
 	call	SwitchRecvAndWait
 	jmp	EndDateCmd
 
@@ -322,14 +314,14 @@ CmdGetTime:
 	call	SwitchRecvAndWait
 	stax	d ; Hours (0...23)
 	inx	d
-	call	Recv
+	call	RecvByte
 	stax	d ; Minutes (0...59)
 	inx	d
-	call	Recv
+	call	RecvByte
 	stax	d ; Seconds (0...59)
 	inx	d
-	call	Recv
-	call	Recv
+	call	RecvByte
+	call	RecvByte
 	jmp	EndDateCmd
 
 CmdSetTime:
@@ -338,17 +330,17 @@ CmdSetTime:
 
 	ldax	d ; Hours (0...23)
 	inx	d
-	call	Send
+	call	SendByte
 	ldax	d ; Minutes (0...59)
 	inx	d
-	call	Send
+	call	SendByte
 	ldax	d ; Seconds (0...59)
 	inx	d
-	call	Send
+	call	SendByte
 	mvi	a,100 ; SecondFraction
-	call	Send
+	call	SendByte
 	xra	a ; SubSeconds
-	call	Send
+	call	SendByte
 	call	SwitchRecvAndWait
 	jmp	EndDateCmd
 
@@ -391,7 +383,7 @@ IFNDEF USE_DMA
 	@out	USER_PORT+1
 ENDIF
 	; If there is synchronization, controller will answer STA_START
-	CALL	Recv
+	CALL	RecvByte
 	CPI	STA_START
 IFDEF USE_DMA
 	JNZ	StartCommandErr2
@@ -403,7 +395,7 @@ ELSE
 	PUSH	B
 	MVI	C, 0
 StartCommand3:
-	CALL	Recv
+	CALL	RecvByte
 	DCR	C
 	JNZ	StartCommand3
 	POP	B
@@ -438,7 +430,7 @@ ENDIF
 	POP	B
 
 	; Передаем код команды
-	JMP	Send
+	JMP	SendByte
 
 IFDEF USE_DMA
 StartCommandErr2:
@@ -453,7 +445,7 @@ ELSE
 ; Переключиться в режим передачи
 
 SwitchSend:
-	CALL	Recv
+	CALL	RecvByte
 SwitchSend0:
 	MVI	A, SEND_MODE
 	@out	USER_PORT+3
@@ -473,7 +465,7 @@ IFNDEF USE_DMA
 
 EndCommand:
 	PUSH	PSW
-	CALL	Recv
+	CALL	RecvByte
 	POP	PSW
 ENDIF
 	RET
@@ -481,24 +473,50 @@ ENDIF
 ;----------------------------------------------------------------------------
 ; Receive word in DE 
 ; A is corrupted.
-
 RecvWord:
-	CALL	Recv
+IFNDEF DMA_SIMPLE
+	CALL	RecvByte
 	MOV	E, A
-	CALL	Recv
+	CALL	RecvByte
 	MOV	D, A
+ELSE
+	PUSH	H
+	PUSH	B
+	LXI	D,BUF
+	LXI	B,4002h
+	;RST	3;
+	CALL	SET_DMAW
+	XCHG
+	MOV	E,M
+	INX	H
+	MOV	D,M
+	POP	B
+	POP	H
+ENDIF
 	RET
 
 ;----------------------------------------------------------------------------
 ; Send word from HL 
 ; A is corrupted.
-
 SendWord:
+IFNDEF DMA_SIMPLE
 	MOV	A, L
-	CALL	Send
+	CALL	SendByte
 	MOV	A, H
-	JMP	Send
-    
+	JMP	SendByte
+ELSE
+	PUSH	D
+	PUSH	B
+	LXI	D, BUF
+	MOV	A, L
+	STAX	D
+	INX	D
+	MOV	A,H
+	STAX	D
+	DCX	D
+	LXI	B,8002h
+	JMP	SendDma
+ENDIF
 ;----------------------------------------------------------------------------
 ; Send string
 ; HL - string
@@ -507,8 +525,8 @@ SendWord:
 SendString:
 	XRA	A
 	ORA	M
-	JZ	Send
-	CALL	Send
+	JZ	SendByte
+	CALL	SendByte
 	INX	H
 	JMP	SendString
 
@@ -532,7 +550,7 @@ SwitchRecvAndWait:
 ; Wait for MC ready.
 
 WaitForReady:
-	CALL	Recv
+	CALL	RecvByte
 	CPI	STA_WAIT
 	JZ	WaitForReady
 	RET
@@ -702,14 +720,27 @@ strcpy255_1:
 ;----------------------------------------------------------------------------
 ; Send byte from A.
 
-Send:
+SendByte:
 IFDEF USE_DMA
+IFNDEF DMA_SIMPLE
 	PUSH	H
 	LHLD	BUF_PTR
 	MOV	M,A
 	INX	H
 	SHLD	BUF_PTR
 	POP H
+ELSE
+	PUSH	D
+	PUSH	B
+	LXI	D,BUF
+	STAX	D
+	LXI	B,8001H
+	;RST	3;
+SendDma:
+	CALL	SET_DMAW
+	POP	B
+	POP	D
+ENDIF
 	RET
 ELSE
 	@out	USER_PORT
@@ -717,8 +748,9 @@ ENDIF
 ;----------------------------------------------------------------------------
 ; Receive byte into А
 
-Recv:
+RecvByte:
 IFDEF USE_DMA
+IFNDEF DMA_SIMPLE
 	LDA	BUF_SIZE
 	ORA	A
 	CZ	DmaReadVariable
@@ -732,6 +764,17 @@ IFDEF USE_DMA
 	SHLD	BUF_PTR
 	POP	H
 ELSE
+	PUSH	D
+	PUSH	B
+	LXI	D,BUF
+	LXI	B,4001h
+	;RST	3;
+	CALL	SET_DMAW
+	LDAX	D
+	POP	B
+	POP	D
+ENDIF
+ELSE
 	MVI	A, 20h
 	@out	USER_PORT+1
 	XRA	A
@@ -740,10 +783,10 @@ ELSE
 ENDIF
 	RET
 IFDEF USE_DMA
+IFNDEF DMA_SIMPLE
 ;----------------------------------------------------------------------------
 SEND_MODE	EQU 0	 ; Send mode
 RECV_MODE	EQU 1	 ; Receive mode
-
 ;----------------------------------------------------------------------------
 ; Set send or receive mode
 
@@ -831,6 +874,12 @@ DmaReadVariable:
 	POP	D
 	RET
 
+ELSE ; DMA_SIMPLE
+SwitchRecv:
+SwitchSend:
+	RET
+ENDIF
+
 ; Set DMA with waiting of the end of transfer
 SET_DMAW:
 ; Program DMA controller
@@ -907,10 +956,13 @@ ENDIF
 	JMP	WD01
 
 
-
+IFNDEF DMA_SIMPLE
 Mode:		db	RECV_MODE
 BUF_PTR:	ds	2
 BUF_SIZE:	ds	1
 BUF:		ds	32
+ELSE
+BUF:		ds	2
+ENDIF
 ENDIF
 ;.End
