@@ -196,83 +196,17 @@ ELSE
 	JNZ 	CmdWriteFile1
 
 	JMP	CmdWriteFile2
-
-IF 0
-;CmdWriteFile1:
-;     MOV	A, M
-;     INX	H
-;     CALL	SendByte
-;     DCX	D
-;     MOV	A, D
-;     ORA	E
-;     JNZ 	CmdWriteFile1
-	MOV	B,H
-	MOV	C,L
-IFDEF  	USE_PRG_DC
-	@SYSREG	0A0H
-	MVI	A,1
-	OUT	PPI_PG
-	@SYSREG	80H
-	LXI	H, PPI_PG*256+1
-ELSE
-	LXI	H, USER_PORT+1
-ENDIF
-	ANA	A
-	MOV	A,D
-	RAR
-	MOV	D,A
-	MOV	A,E
-	RAR
-	MOV	E,A
-	INR 	D
-	XRA 	A
-	ORA 	E
-	JZ	SendBlock2
-
-SendBlock1:
-	REPT	2
-	LDAX	B
-  IFDEF	USE_PRG_DC
-	STA	PPI_PG*256		; 13
-  ELSE
-	STA	USER_PORT		; 13
-  ENDIF
-	INX	B			; 5
-	MVI	M, 20h			; 10
-	MVI	M, 0			; 10
-	ENDM
-	DCR	E			; 5
-	JNZ	SendBlock1		; 10 = 66
-SendBlock2:
-	DCR	D
-	JNZ	SendBlock1
-IFDEF  	USE_PRG_DC
-	@SYSREG	0A0H
-	MVI	A,MEM_HI+10h
-	OUT	PPI_PG
-	@SYSREG	80H
-ENDIF
-	MOV	H,B
-	MOV	L,C
-ENDIF
-	JMP	CmdWriteFile2
 ENDIF
 ;--------------------------------------------------------------------------------
 CmdGetDate:
 	MVI	A,2Ah
 	call	StartCommand
 
-	call	SwitchRecvAndWait
-	stax	d ; WeekDay
-	inx	d
-	call	RecvByte
-	stax	d ; Month
-	inx	d
-	call	RecvByte
-	stax	d ; Date (1...31)
-	inx	d
-	call	RecvByte
-	stax	d
+	call	SwRecvSave; WeekDay
+	call	RecvSave  ; Month
+	call	RecvSave  ; Date (1...31)
+	call	RecvSave
+EndDateCmd2:
 	call	RecvByte
 EndDateCmd:
 	cpi	STA_OK_CMD
@@ -290,49 +224,44 @@ CmdSetDate:
 	mvi	a,2 ; WeekDay todo: need to compute from Day,Month,Year
 	inx	d
 	call	SendByte
-	ldax	d ; Month
-	inx	d
-	call	SendByte
-	ldax	d ; Day
-	inx	d
-	call	SendByte
-	ldax	d ; Year
+	call	LdByteSend ; Month
+	call	LdByteSend ; Day
+	call	LdByteSend ; Year
 	jmp	CmdSetXX
+
+SwRecvSave:
+	call	SwitchRecvAndWait
+	stax	d
+	inx	d
+	ret
+
+RecvSave:
+	call	RecvByte
+	stax	d
+	inx	d
+	ret
 
 CmdGetTime:
 	mvi	A,2Ch
 	call	StartCommand
 
-	call	SwitchRecvAndWait
-	stax	d ; Hours (0...23)
-	inx	d
-	call	RecvByte
-	stax	d ; Minutes (0...59)
-	inx	d
-	call	RecvByte
-	stax	d ; Seconds (0...59)
-	inx	d
+	call	SwRecvSave; Hours (0...23)
+	call	RecvSave  ; Minutes (0...59)
+	call	RecvSave  ; Seconds (0...59)
 	call	RecvByte
 	call	RecvByte
-	call	RecvByte
-	jmp	EndDateCmd
+	jmp	EndDateCmd2
 
 CmdSetTime:
 	mvi	a,2Dh
 	call	StartCommand
 
-	ldax	d ; Hours (0...23)
-	inx	d
+	call	LdByteSend ; Hours (0...23)
+	call	LdByteSend ; Minutes (0...59)
+	call	LdByteSend ; Seconds (0...59)
+	mvi	a,100      ; SecondFraction
 	call	SendByte
-	ldax	d ; Minutes (0...59)
-	inx	d
-	call	SendByte
-	ldax	d ; Seconds (0...59)
-	inx	d
-	call	SendByte
-	mvi	a,100 ; SecondFraction
-	call	SendByte
-	xra	a ; SubSeconds
+	xra	a	   ; SubSeconds
 CmdSetXX:
 	call	SendByte
 	call	SwitchRecvAndWait
@@ -711,9 +640,11 @@ strcpy255_1:
 	MVI	M, 0 ; Terminator
 	RET
 
+LdByteSend:
+	ldax	d ; Month
+	inx	d
 ;----------------------------------------------------------------------------
 ; Send byte from A.
-
 SendByte:
 IFDEF USE_DMA
 IFNDEF DMA_SIMPLE
