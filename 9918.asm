@@ -100,6 +100,9 @@ T_Reset:
 
 TmsWait	EQU 10
 
+; A - byte to fill
+; DE - VRAM address
+; BC - byte count
 T_Fill:
 	PUSH	B
 	MOV	B,D
@@ -107,15 +110,17 @@ T_Fill:
 	MOV	E,A
 	CALL	T_SetAddrWrite
 	POP	B
-@loop40:
+T_Fill01:
 	MOV	A,E
 	OUT	VDP
 	DCX	B
 	MOV	A,B
 	ORA	C
-	JNZ	@loop40
+	JNZ	T_Fill01
 	RET
 
+; HL - buffer in RAm
+; DE - byte count
 T_WriteBytes:
 	MOV	A,M
 	OUT	VDP
@@ -126,6 +131,9 @@ T_WriteBytes:
 	JNZ	T_WriteBytes
 	RET
 
+; HL - buffer in RAM
+; DE - VRAM address
+; B - byte count
 T_ShAddrWriteBytes:
 	PUSH	B
 	MOV	B,D
@@ -141,6 +149,8 @@ T_ShortWriteBytes:
 	JNZ	T_ShortWriteBytes
 	RET
 
+; HL - buffer in RAM
+; DE - byte count
 T_ReadBytes:
 	IN	VDP
 	MOV	M,A
@@ -151,6 +161,9 @@ T_ReadBytes:
 	JNZ	T_ReadBytes
 	RET
 
+; HL - RAM buffer address
+; DE - VRAM address to read
+; B - byte count
 T_ShAddrReadBytes:
 	PUSH	H
 	PUSH	B
@@ -183,6 +196,7 @@ T_WriteRegValue:
 	OUT	VDP+1
 	JMP	RET_SET_EI
 
+; HL - address to write
 T_SetAddrWriteHL:
 	DI
 	MOV	A,L
@@ -192,6 +206,7 @@ T_SetAddrWriteHL:
 	OUT	VDP+1
 	JMP	RET_SET_EI
 
+; HL - address to read
 T_SetAddrReadHL:
 	DI
 	MOV	A,L
@@ -224,10 +239,12 @@ T_TextPos:
 	MOV	B,H
 	MOV	C,L
 
+; BC - address to write
 T_SetAddrWrite:
 	MOV	A,B
 	ORI	40h
 	MOV	B,A
+; BC - address to read
 T_SetAddrRead:
 	DI
 	MOV	A,C
