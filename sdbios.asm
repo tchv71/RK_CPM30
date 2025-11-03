@@ -275,17 +275,11 @@ CmdGetDate:
 	stax	d
 	call	RecvByte
 EndDateCmd:
-	;push	psw
-	;call	SwitchSend
-	;mvi	a,STA_OK_CMD
-	;call	SendByte
-	;pop	psw
-
 	cpi	STA_OK_CMD
-	jz	ret0
-IFDEF USE_DMA
+IFDEF	USE_DMA
 	RET
 ELSE
+	jz	ret0
 	jmp	EndCommand
 ENDIF
 
@@ -303,9 +297,7 @@ CmdSetDate:
 	inx	d
 	call	SendByte
 	ldax	d ; Year
-	call	SendByte
-	call	SwitchRecvAndWait
-	jmp	EndDateCmd
+	jmp	CmdSetXX
 
 CmdGetTime:
 	mvi	A,2Ch
@@ -320,6 +312,7 @@ CmdGetTime:
 	call	RecvByte
 	stax	d ; Seconds (0...59)
 	inx	d
+	call	RecvByte
 	call	RecvByte
 	call	RecvByte
 	jmp	EndDateCmd
@@ -340,6 +333,7 @@ CmdSetTime:
 	mvi	a,100 ; SecondFraction
 	call	SendByte
 	xra	a ; SubSeconds
+CmdSetXX:
 	call	SendByte
 	call	SwitchRecvAndWait
 	jmp	EndDateCmd
