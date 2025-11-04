@@ -62,52 +62,22 @@ WBOOT_ADR:
 
 DATE:
 	push	d
-IF 0
-	@in	0FFh
-	mvi	a,0C0h
-	@out	0FFh
-	; Set PPI3 as PPI2 temporary
-	mvi	a,14
-	@out	PPI2
-	@out	PPI2+1
-	@out	PPI2+2
-	@out	PPI2+3
-	@in	0FFh
-	mvi	a,80h
-	@out	0FFh
-ENDIF
 	call	DispDate
-
-IF 0
-	push	psw
-	@in	0FFh
-	mvi	a,0C0h
-	@out	0FFh
-	; Restore PPI2
-	mvi	a,1
-	@out	PPI2
-	@out	PPI2+1
-	@out	PPI2+2
-	@out	PPI2+3
-	@in	0FFh
-	mvi	a,80h
-	@out	0FFh
-	pop	psw
-ENDIF
 	pop	d
-	cpi	2bh
+	mov	a,c
+	cpi	2dh
 	jz	SetClock
 	ret
 
 DispDate:
 	mov	a,c
-	cpi	2aH
+	sui	2aH
 	jz	CmdGetDate
-	cpi	2bh
+	dcr	a ; 2bh
 	jz	CmdSetDate
-	cpi	2ch
+	dcr	a ; 2ch
 	jz	CmdGetTime
-	cpi	2dh
+	dcr	a ; 2dh
 	jz	CmdSetTime
 	mvi	A,0FFH
 	ret

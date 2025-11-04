@@ -736,8 +736,108 @@ SetClock:
 	ldax	d
 	call	ToBcd
 	mov	m,a
+	push	h
+	lxi	d,DateBuf
+	mvi	c,2Ah
+	call	DATE
+	pop	h
+	lxi	h, DateStr
+	call	DsplDate
 	POP	H
 	JMP	RET_SET_EI
+
+
+DsplDate:
+	push	d
+	push	b
+
+; Mon 22-11-2025 
+
+	lda	WeekDay
+	mov	c,a
+	call	PrintWeekday
+	mvi	m,' '
+	inx h
+	lda	Date_
+	call	PrintDay
+	mvi	m,'-'
+	inx	h
+	lda	Month
+	call	PrintDay
+	mvi	m,'-'
+	inx	h
+	lda	Year
+	cpi	80
+	jc	p2000
+	mvi	m,'1'
+	inx	h
+	mvi	m,'9'
+	inx	h
+	jmp	date01
+p2000:
+	mvi	m,'2'
+	inx	h
+	mvi	m,'0'
+	inx	h
+date01:
+	cpi	10
+	jnc	date02
+	mvi	m,'0'
+	inx	h
+date02:
+	call	PrintDay
+	mvi	m,0
+	pop	b
+	pop	d
+	ret
+
+PrintDate:
+	ldax	d
+	inx	d
+	ora	a
+	rz
+	mov	m,a
+	inx	h
+	jmp	PrintDate
+
+
+PrintWeekday:
+	lxi	d,WeekDaysStr
+	inr	c
+pwd01:	dcr	c
+	jz	pwd02
+pwd03:	ldax	d
+	inx	d
+	ora	a
+	rz
+	cpi	'$'
+	jnz	pwd03
+	jmp	pwd01
+
+pwd02:	ldax	d
+	inx	d
+	cpi	'$'
+	rz
+	mov	m,a
+	inx	h
+	jmp	pwd02
+
+PrintDay:
+	mvi	e,'0'
+	cpi	10
+	jc	pd01
+pd02:
+	inr	e
+	sui	10
+	cpi	10
+	jnc	pd02
+	mov	m,e
+	inx	h
+pd01:
+	adi	'0'
+	mov	m,a
+	inx	h
+	ret
 
 Irq_Handler:
 IFDEF VDP9918
@@ -776,6 +876,17 @@ Minutes:	DB	0
 Seconds:	DB	0
 SecondFraction:	DB	0
 SubSeconds:	DB	0
+
+DateBuf:
+WeekDay:	DB	0
+Month:		DB	0
+Date_:		DB	0
+Year:		DB	0
+
+DateStr:	ds	17
+
+WeekDaysStr:
+	DB	'Sun$Mon$Tue$Wed$Thu$Fr$Sat$',0
 
 ToBcd:
 	push	b
@@ -853,6 +964,13 @@ DispT01:
 DispT02:
 	inx	h
 	jnz	DispT01
+	push	h
+	xchg
+	lxi	d, -16
+	dad	d
+	lxi	d, DateStr
+	call	PrintDate
+	pop	h
 	pop	b
 	pop	d
 	ret
