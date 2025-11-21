@@ -249,8 +249,31 @@ IFDEF	VDP9918
 	XCHG
 	LXI	H,STRBUF
 	MVI	B,PHYS_W
+	IN	VDP+1 ; Read status
+	LDA	NO_EI
+	PUSH	PSW
+	MVI	A, 1
+	STA	NO_EI
+	DI
 	CALL	T_ShAddrReadBytes
+	POP	PSW
+	STA	NO_EI
+	CALL	RET_SET_EI
 	POP	D
+IF 0
+	push	h
+	push	b
+	mvi	b, PHYS_W
+	mvi	a, ' '
+IL10:
+	mov	m,a
+	inr	a
+	inx	h
+	dcr	b
+	jnz	IL10
+	pop	b
+	pop	h
+ENDIF
 	;MVI	B, PHYS_W
 	CALL	T_ShAddrWriteBytes
 	POP	D
@@ -991,7 +1014,11 @@ IncPos:
 ; Set a screen mode according to Disp_PB
 SETSCR::
 IFDEF	VDP9918
+IFDEF FONT8X16
 	MVI	A,80H
+ELSE
+	XRA	A
+ENDIF
 SETSCR2:
 	PUSH	PSW
 	CALL	T_InitialiseText80
