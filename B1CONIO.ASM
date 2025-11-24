@@ -170,6 +170,8 @@ pnc02:
 	CALL	T_SetAddrWriteHL
 	LDA	CURSYM
 	OUT	VDP
+	LDA	CURATR
+	OUT	VDP
 	POP	PSW
 ENDIF
 	LHLD	CHPNT
@@ -180,8 +182,12 @@ pnc01:
 	CALL	T_SetAddrReadHL
 	IN	VDP
 	STA	CURSYM
+	IN	VDP
+	STA	CURATR
 	CALL	T_SetAddrWriteHL
 	MVI	A, 255 ; Cursor
+	OUT	VDP
+	LDA	ScrAttr
 	OUT	VDP
 	SHLD	CURADR
 ENDIF
@@ -202,6 +208,9 @@ OUTC:	MOV	B,A
 	JZ	_ESC2
 	DCR	A
 	JZ	_ESC1
+	lda	?EscColor
+	ora	a
+	jnz	EscColorAdd
 	MOV	A,B
 	CPI	'Y'
 	RZ
@@ -210,9 +219,12 @@ IF ROBOTRON
 	STA	?ESC
 	RET
 ENDIF
+	cpi	'['
+	jz	EscColor
 	PUSH	PSW
 	XRA	A
 	STA	?ESC
+	STA	?EscColor
 	POP	PSW
 	cpi	'A'
 	jz	Up
@@ -248,7 +260,7 @@ IFDEF	VDP9918
 	PUSH	D
 	XCHG
 	LXI	H,STRBUF
-	MVI	B,PHYS_W
+	MVI	B,PHYS_W * 2
 	IN	VDP+1 ; Read status
 	LDA	NO_EI
 	PUSH	PSW
@@ -260,36 +272,16 @@ IFDEF	VDP9918
 	STA	NO_EI
 	CALL	RET_SET_EI
 	POP	D
-IF 0
-	push	h
-	push	b
-	mvi	b, PHYS_W
-	mvi	a, ' '
-IL10:
-	mov	m,a
-	inr	a
-	inx	h
-	dcr	b
-	jnz	IL10
-	pop	b
-	pop	h
-ENDIF
-	;MVI	B, PHYS_W
 	CALL	T_ShAddrWriteBytes
 	POP	D
 	POP	H
-	;MOV	A,H
-	;CPI	high(ENDSCR)
-	;JNZ	DL01
-	;MOV	A,L
-	;CPI	low(ENDSCR)
-	;JNZ	DL01
 	DCR	C
 	JNZ	DL02
-	XRA	A
+	;XRA	A
 	LXI	B,PHYS_W
 	XCHG
-	CALL	T_Fill
+	LHLD	ScrAttr
+	CALL	T_FillHL
 	POP	H
 	RET
 ELSE
@@ -307,6 +299,122 @@ DL0:	MOV	A,M
 	RET
 ENDIF
 
+EscColor:
+	mvi	a,1
+	sta	?EscColor
+	mvi	a,6
+	sta	?ESC
+	push	h
+	lxi	h,ColorCode
+	shld	ColorCodePtr
+	pop	h
+	ret
+
+EscColorAdd:
+	push	h
+	call	EscCA01
+	pop	h
+	ret
+
+EscCA01:
+	mov	a,b
+	cpi	'm'
+	lhld	ColorCodePtr
+	jz	EndEscColor
+	mov	m,a
+	inx	h
+	shld	ColorCodePtr
+	ret
+EndEscColor:
+	xra	a
+	mov	m,a
+	sta	?EscColor
+	sta	?ESC
+ParseColor:
+	lxi	h,ColorCode+1
+	mov	a,m
+	ora	a
+	jnz	pc02
+; 1 - symbol sequence
+	dcx	h
+	mov	a,m
+	cpi	'0'
+	jz	ClrReset
+	cpi	'1' ; Bold
+	cpi	'4' ; Underline
+	cpi	'7' ; Reverse
+	ret
+ClrReset:
+	lxi	h,T_BLACK OR (T_WHITE SHL 4)
+	shld	ScrAttr
+	ret
+pc02:	inx	h
+	mov	a,m
+	ora	a
+	jnz	pc03
+	dcx	h
+	dcx	h
+	mov	a,m
+	cpi	'3'
+	mvi	d,0
+	jz	ClrSetFg
+	cpi	'4'
+	jz	ClrSetBg
+	cpi	'9'
+	mvi	d,8
+	rnz
+ClrSetFg:
+	call	GetClrMap
+	rnc
+	mov	a, m
+	rlc
+	rlc
+	rlc
+	rlc
+	mov	e,a
+	lxi	h,ScrAttr
+	mov	a,m
+	ani	0Fh
+	ora	e
+	mov	m,a
+	ret
+
+pc03:	dcx	h
+	dcx	h
+	mov	a,m
+	cpi	'1'
+	rnz
+	inx	h
+	mov	a,m
+	cpi	'0'
+	rnz
+	mvi	d,8
+ClrSetBg:
+	call	GetClrMap
+	rnc
+	mov	e, m
+	lxi	h,ScrAttr
+	mov	a,m
+	ani	0F0h
+	ora	e
+	mov	m,a
+	ret
+
+
+GetClrMap:
+	inx	h
+	mov	a,m
+	cpi	'8'
+	rnc
+	sui	'0'
+	add	d
+	mov	e,a
+	mvi	d,0
+	lxi	h,ColorMap
+	dad	d
+	stc
+	ret
+
 ; INSERT LINE UNDER CURSOR
 INSLIN:	PUSH	H
 	LHLD	STRADR
@@ -318,11 +426,9 @@ IL01:	MOV	D,H
 	PUSH	D
 	PUSH	H
 	LXI	H,STRBUF
-	MVI	B,PHYS_W
+	MVI	B,PHYS_W * 2
 	CALL	T_ShAddrReadBytes
 	POP	D
-	LXI	H,STRBUF
-	MVI	B, PHYS_W
 	CALL	T_ShAddrWriteBytes
 	POP	D
 	POP	H
@@ -331,9 +437,10 @@ IL01:	MOV	D,H
 	MOV	A,L
 	CPI	low(ENDSCR)
 	JNZ	IL01
-	XRA	A
+	;XRA	A
 	LXI	B,PHYS_W
-	CALL	T_Fill
+	LHLD	ScrAttr
+	CALL	T_FillHL
 	POP	H
 	RET
 ELSE
@@ -371,7 +478,8 @@ ELSE
 	XRA	A
 	MOV	B,A
 	XCHG
-	JMP	T_Fill
+	LHLD	ScrAttr
+	JMP	T_FillHL
 ENDIF
 
 @@@:	MOV	A,B
@@ -403,10 +511,10 @@ ENDIF
 PutcNoCtrl:
 IFDEF	VDP9918
 	PUSH	PSW
-	MOV	B,H
-	MOV	C,L
-	CALL	T_SetAddrWrite
+	CALL	T_SetAddrWriteHL
 	POP	PSW
+	OUT	VDP
+	LDA	ScrAttr
 	OUT	VDP
 ELSE
 	MOV	M,A
@@ -466,6 +574,10 @@ _@ESC:	SHLD	STRADR
 	CALL	NXT_S
 	JMP	_@ESC
 
+ColorCode:
+	DS	4
+ColorCodePtr:
+	DS	2
 _ESC2:
 IF ROBOTRON
 	LDA	ESC5F
@@ -638,8 +750,12 @@ CLS:	CALL	@HOME
 IFDEF	VDP9918
 	LXI	D,0
 	LXI	B, SCR_SIZE
-	XRA	A
-	JMP	T_Fill
+	;XRA	A
+	PUSH	H
+	LHLD	ScrAttr
+	CALL	T_FillHL
+	POP	H
+	RET
 ELSE
 IF 1
 	DI
@@ -1125,6 +1241,8 @@ YSIZE:	DB	SCR_H
 ; Internal variables
 CHPNT:	DW	VRAM	; Current position in screen buffer
 ?ESC:	DB	0	; ESC sequence flag
+?EscColor:
+	DB	0	; ESC color sequence flag
 
 CURX:	DB	SCR_W	; Current cursor location ( from DOWN-RIGHT corner)
 CURY:	DB	SCR_H
@@ -1132,9 +1250,13 @@ STRADR:	DW	VRAM	; Start of current line
 IFDEF	VDP9918
 CURADR:	DW	VRAM
 CURSYM:	DB	0
+CURATR:	DB	0F4h
 ENDIF
-STRBUF:	DS	PHYS_W
-
+STRBUF:	DS	PHYS_W*2
+ScrAttr:	DW	T_DK_BLUE OR (T_WHITE SHL 4)
+ColorMap:
+	DB T_BLACK,T_DK_RED, T_DK_GREEN, T_DK_YELLOW, T_DK_BLUE, T_MAGENTA, T_CYAN, T_GREY
+	DB T_GREY,T_LT_RED, T_LT_GREEN, T_LT_YELLOW, T_LT_BLUE, T_MAGENTA, T_CYAN, T_WHITE
 
 ;	end
 

@@ -23,7 +23,6 @@ T_MAGENTA		EQU	13
 T_GREY			EQU	14
 T_WHITE			EQU	15
 
-
 T_REG_0			EQU	0
 T_REG_1			EQU	1
 T_REG_2			EQU	2
@@ -73,6 +72,7 @@ T_DEF_VRAM_SPR_PATT_ADDRESS	EQU	1800h
 T_T80_VRAM_COLOR_ADDRESS	EQU	0A00h
 T_T80_VRAM_NAME_ADDRESS		EQU	0000h
 T_T80_VRAM_PATT_ADDRESS		EQU	2000h
+T_T80_VRAM_ATTR_ADDRESS		EQU	3000h
 
 
 VDP	EQU	98H
@@ -119,6 +119,26 @@ T_Fill01:
 	JNZ	T_Fill01
 	RET
 
+; HL - 2 bytes to fill
+; DE - VRAM address
+; BC - word count
+T_FillHL:
+	PUSH	B
+	MOV	B,D
+	MOV	C,E
+	;MOV	E,A
+	CALL	T_SetAddrWrite
+	POP	B
+T_Fill02:
+	MOV	A,H
+	OUT	VDP
+	MOV	A,L
+	OUT	VDP
+	DCX	B
+	MOV	A,B
+	ORA	C
+	JNZ	T_Fill02
+	RET
 ; HL - buffer in RAm
 ; DE - byte count
 T_WriteBytes:

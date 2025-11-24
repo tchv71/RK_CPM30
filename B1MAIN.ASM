@@ -145,10 +145,10 @@ ENDIF
 	CALL	SETSCR
 	CALL	LOAD_FONT
 	CALL	PRNT;##
-IFNDEF	VDP9918
 	DB	1FH
-ENDIF
+	DB	27,'[31m'
 	DB	'CP/M-80 vers. 2.2'
+	DB	27,'[97m'
 	DB	0DH,0AH,'Copyright (C) 1980, Digital Research'
 	DB	0DH,0AH,'BIOS vers. 3.2      (c) TCHV,1991-92'
 	DB	",2023", 0DH, 0AH
