@@ -261,13 +261,29 @@ IFDEF	VDP9918
 	XCHG
 	LXI	H,STRBUF
 	MVI	B,PHYS_W * 2
-	IN	VDP+1 ; Read status
+	;IN	VDP+1 ; Read status
 	LDA	NO_EI
 	PUSH	PSW
 	MVI	A, 1
 	STA	NO_EI
 	DI
 	CALL	T_ShAddrReadBytes
+IF	0
+	push	h
+	push	b
+	mvi	a,' '
+dl99:
+	mov	m,a
+	inr	a
+	inx	h
+	mvi	m,0f4h
+	inx	h
+	dcr	b
+	dcr	b
+	jnz	dl99
+	pop	b
+	pop	h
+ENDIF
 	POP	PSW
 	STA	NO_EI
 	CALL	RET_SET_EI

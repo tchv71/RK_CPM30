@@ -253,6 +253,7 @@
     <None Include="E0GETC.ASM" />
     <None Include="FDCNTR.ASM" />
     <None Include="font8x16.asm" />
+    <None Include="fontMsx.asm" />
     <None Include="Makefile" />
     <None Include="README.md" />
     <None Include="RK86.MAC" />

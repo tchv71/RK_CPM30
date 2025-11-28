@@ -185,14 +185,16 @@ T_ReadBytes:
 ; DE - VRAM address to read
 ; B - byte count
 T_ShAddrReadBytes:
-	PUSH	H
-	PUSH	B
 	XCHG
 	CALL	T_SetAddrReadHL
 	XCHG
+	PUSH	H
+	PUSH	B
 T_ShortReadBytes:
 	IN	VDP
 	MOV	M,A
+	;XTHL
+	;XTHL
 	INX	H
 	DCR	B
 	JNZ	T_ShortReadBytes
@@ -332,7 +334,7 @@ font16:
 	CALL	T_WriteRegValue
 
 reg0ok:
-	LXI	B, (T_REG_1 SHL 8) OR T_R1_MODE_TEXT OR T_R1_DISP_ACTIVE OR T_R1_INT_ENABLE
+	LXI	B, (T_REG_1 SHL 8) OR T_R1_MODE_TEXT OR T_R1_DISP_ACTIVE; OR T_R1_INT_ENABLE
 	CALL	T_WriteRegValue
 
 	LXI	B, (T_REG_FG_BG_COLOR SHL 8) OR T_DK_BLUE OR (T_WHITE SHL 4)
