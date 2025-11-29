@@ -12,13 +12,32 @@ IFNDEF	PPI_ADR
 ;EXTRN	PPI_ADR
 ENDIF
 
-; Get character from concole (returns in Acc)
+	DS	0F700h - $
+	; F700h - 0F77Fh - gap for bios variables
+	DS	80h
+; Get character from console (returns in Acc)
 GETCHR:
 	PUSH	H
 	PUSH	D
 	PUSH	B
+	LHLD	CharBufPtr
+	MOV	A,H
+	ORA	L
+	JZ	GETCH01
+	MOV	A,M
+	ORA	A
+	JZ	GETCH02
+	INX	H
+	SHLD	CharBufPtr
+	SUI	20h
+	JMP	GETCHRET
+GETCH02:
+	LXI	H,0
+	SHLD	CharBufPtr
+GETCH01:
 	CALL	GTC
 	CALL	MODRUS
+GETCHRET:
 	POP	B
 	POP	D
 	POP	H

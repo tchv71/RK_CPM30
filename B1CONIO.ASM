@@ -165,13 +165,27 @@ IFNDEF	VDP9918
 ENDIF
 IFDEF	VDP9918
 	PUSH	PSW
+	LDA	CursorShowed
+	ORA	A
+	JZ	pnc03
 	LHLD	CURADR
+IFDEF FONT8X16
+	PUSH	B
+	LXI	B, T_T80_VRAM_ATTR_ADDRESS
+	DAD	B
+	CALL	T_SetAddrWriteHL
+	LDA	CURATR
+	OUT	VDP
+	POP	B
+ELSE
 pnc02:
 	CALL	T_SetAddrWriteHL
 	LDA	CURSYM
 	OUT	VDP
 	LDA	CURATR
 	OUT	VDP
+ENDIF
+pnc03:
 	POP	PSW
 ENDIF
 	LHLD	CHPNT
@@ -179,17 +193,39 @@ ENDIF
 	SHLD	CHPNT
 IFDEF	VDP9918
 pnc01:
+	LDA	CursorShowed
+	ORA	A
+	JZ	pnc04
+IFDEF FONT8X16
+	PUSH	H
+	PUSH	B
+	LXI	B, T_T80_VRAM_ATTR_ADDRESS
+	DAD	B
+	CALL	T_SetAddrReadHL
+	IN	VDP
+	STA	CURATR
+	CALL	T_SetAddrWriteHL
+	LDA	ScrAttr
+	RLC
+	RLC
+	RLC
+	RLC
+	OUT	VDP
+	POP	B
+	POP	H
+	SHLD	CURADR
+ELSE
+	PUSH	H
 	CALL	T_SetAddrReadHL
 	IN	VDP
 	STA	CURSYM
 	IN	VDP
 	STA	CURATR
-	CALL	T_SetAddrWriteHL
-	MVI	A, 255 ; Cursor
-	OUT	VDP
-	LDA	ScrAttr
-	OUT	VDP
+	CALL	ClearCursor
+	POP	H
 	SHLD	CURADR
+ENDIF
+pnc04:
 ENDIF
 	lhld	CURX
 	call	GOTOXY
@@ -197,6 +233,14 @@ ENDIF
 	POP	D
 	POP	B
 	POP	H
+	RET
+
+ClearCursor:
+	CALL	T_SetAddrWriteHL
+	MVI	A, 255 ; Cursor
+	OUT	VDP
+	LDA	ScrAttr
+	OUT	VDP
 	RET
 
 OUTC:	MOV	B,A
@@ -214,6 +258,9 @@ OUTC:	MOV	B,A
 	MOV	A,B
 	CPI	'Y'
 	RZ
+	CPI	'Z'
+	JZ	GetCursPos
+
 IF ROBOTRON
 	XRA	A
 	STA	?ESC
@@ -226,6 +273,10 @@ ENDIF
 	STA	?ESC
 	STA	?EscColor
 	POP	PSW
+	cpi	'a'
+	jz	HideCursor
+	cpi	'b'
+	jz	ShowCursor
 	cpi	'A'
 	jz	Up
 	cpi	'B'
@@ -314,6 +365,49 @@ DL0:	MOV	A,M
 	POP	H
 	RET
 ENDIF
+
+HideCursor:
+	xra	a
+	sta	CursorShowed
+	jmp	ClearCursor
+	
+
+ShowCursor:
+	mvi	a,1
+	sta	CursorShowed
+	ret
+CursorShowed:
+	db	1
+
+GetCursPos:
+	PUSH	H
+	PUSH	B
+	LXI	H, CharBuf
+	SHLD	CharBufPtr
+	LDA	CURX
+	MOV	B,A
+	LDA	XSIZE
+	SUB	B
+	ADI	20h
+	MOV	M,A
+	INX	H
+	LDA	CURY
+	MOV	B,A
+	LDA	YSIZE
+	SUB	B
+	ADI	20h
+	MOV	M,A
+	INX	H
+	MVI	M,0
+	POP	B
+	POP	H
+	RET
+
+CharBuf:
+	DS	2
+	DB	0
+CharBufPtr:
+	DW	0
 
 EscColor:
 	mvi	a,1
@@ -499,6 +593,8 @@ ELSE
 ENDIF
 
 @@@:	MOV	A,B
+	CPI	20h
+	JNC	PutcNoCtrl
 	CPI	@ESC
 	JZ	_ESC
 	CPI	0DH
