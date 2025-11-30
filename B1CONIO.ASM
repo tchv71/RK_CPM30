@@ -168,23 +168,7 @@ IFDEF	VDP9918
 	LDA	CursorShowed
 	ORA	A
 	JZ	pnc03
-	LHLD	CURADR
-IFDEF FONT8X16
-	PUSH	B
-	LXI	B, T_T80_VRAM_ATTR_ADDRESS
-	DAD	B
-	CALL	T_SetAddrWriteHL
-	LDA	CURATR
-	OUT	VDP
-	POP	B
-ELSE
-pnc02:
-	CALL	T_SetAddrWriteHL
-	LDA	CURSYM
-	OUT	VDP
-	LDA	CURATR
-	OUT	VDP
-ENDIF
+	call	ClearCursor
 pnc03:
 	POP	PSW
 ENDIF
@@ -213,18 +197,19 @@ IFDEF FONT8X16
 	OUT	VDP
 	POP	B
 	POP	H
-	SHLD	CURADR
 ELSE
-	PUSH	H
 	CALL	T_SetAddrReadHL
 	IN	VDP
 	STA	CURSYM
 	IN	VDP
 	STA	CURATR
-	CALL	ClearCursor
-	POP	H
-	SHLD	CURADR
+	CALL	T_SetAddrWriteHL
+	MVI	A, 255 ; Cursor
+	OUT	VDP
+	LDA	ScrAttr
+	OUT	VDP
 ENDIF
+	SHLD	CURADR
 pnc04:
 ENDIF
 	lhld	CURX
@@ -236,11 +221,22 @@ ENDIF
 	RET
 
 ClearCursor:
+	LHLD	CURADR
+IFDEF FONT8X16
+	PUSH	B
+	LXI	B, T_T80_VRAM_ATTR_ADDRESS
+	DAD	B
 	CALL	T_SetAddrWriteHL
-	MVI	A, 255 ; Cursor
+	LDA	CURATR
 	OUT	VDP
-	LDA	ScrAttr
+	POP	B
+ELSE
+	CALL	T_SetAddrWriteHL
+	LDA	CURSYM
 	OUT	VDP
+	LDA	CURATR
+	OUT	VDP
+ENDIF
 	RET
 
 OUTC:	MOV	B,A
@@ -369,8 +365,10 @@ ENDIF
 HideCursor:
 	xra	a
 	sta	CursorShowed
-	jmp	ClearCursor
-	
+	push	h
+	call	ClearCursor
+	pop	h
+	ret
 
 ShowCursor:
 	mvi	a,1
