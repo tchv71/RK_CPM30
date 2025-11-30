@@ -323,7 +323,7 @@ dl99:
 	mov	m,a
 	inr	a
 	inx	h
-	mvi	m,0f4h
+	mvi	m,04fh
 	inx	h
 	dcr	b
 	dcr	b
@@ -474,15 +474,10 @@ pc02:	inx	h
 ClrSetFg:
 	call	GetClrMap
 	rnc
-	mov	a, m
-	rlc
-	rlc
-	rlc
-	rlc
-	mov	e,a
+	mov	e, m
 	lxi	h,ScrAttr
 	mov	a,m
-	ani	0Fh
+	ani	0F0h
 	ora	e
 	mov	m,a
 	ret
@@ -500,10 +495,15 @@ pc03:	dcx	h
 ClrSetBg:
 	call	GetClrMap
 	rnc
-	mov	e, m
+	mov	a, m
+	rlc
+	rlc
+	rlc
+	rlc
+	mov	e,a
 	lxi	h,ScrAttr
 	mov	a,m
-	ani	0F0h
+	ani	0Fh
 	ora	e
 	mov	m,a
 	ret
@@ -1360,10 +1360,10 @@ STRADR:	DW	VRAM	; Start of current line
 IFDEF	VDP9918
 CURADR:	DW	VRAM
 CURSYM:	DB	0
-CURATR:	DB	0F4h
+CURATR:	DB	04Fh
 ENDIF
 STRBUF:	DS	PHYS_W*2
-ScrAttr:	DW	T_DK_BLUE OR (T_WHITE SHL 4)
+ScrAttr:	DW	T_WHITE OR (T_DK_BLUE SHL 4)
 ColorMap:
 	DB T_BLACK,T_DK_RED, T_DK_GREEN, T_DK_YELLOW, T_DK_BLUE, T_MAGENTA, T_CYAN, T_GREY
 	DB T_GREY,T_LT_RED, T_LT_GREEN, T_LT_YELLOW, T_LT_BLUE, T_MAGENTA, T_CYAN, T_WHITE
