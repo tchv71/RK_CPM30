@@ -12,9 +12,6 @@ IFNDEF	PPI_ADR
 ;EXTRN	PPI_ADR
 ENDIF
 
-	DS	0F700h - $
-	; F700h - 0F77Fh - gap for bios variables
-	DS	80h
 ; Get character from console (returns in Acc)
 GETCHR:
 	PUSH	H

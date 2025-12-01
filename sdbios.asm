@@ -197,6 +197,70 @@ ELSE
 
 	JMP	CmdWriteFile2
 ENDIF
+IF 0
+CmdBiosSelDsk:
+	; Command code
+	MVI	A, 10
+CmdBiosXX:
+	CALL	StartCommand
+
+	MOV	A, C
+	JMP	SendByte
+
+CmdBiosSetTrk:
+	; Command code
+	MVI	A, 11
+	CALL	StartCommand
+
+	MOV	L, C
+	MOV	H, B
+	JMP	SendWord
+
+CmdBiosSetSect:
+	; Command code
+	MVI	A, 12
+	JMP	CmdBiosXX
+
+CmdBiosRdRect:
+	; Command code
+	MVI	A, 13
+	CALL	StartCommand
+
+	CALL	SwitchRecv
+	CALL	WaitForReady
+	CPI	STA_OK_BLOCK
+	RNZ;	EndCommand	; NZ on exit (error)
+	LXI	d,128
+	LHLD	dmaadr
+	MOV	B,H
+	MOV	C,L
+	JMP	RecvBlock
+
+
+CmdBiosWrRect:
+	; Command code
+	MVI	A, 14
+	CALL	StartCommand
+
+	; Дополнительная информация от CP/M:
+	; 0 - Запись данных можно отложить
+	; 1 - Нужно записать все данные на дискету сейчас
+	; 2 - Запись в блок файловой системы,который до этого не использовался
+	; Сообщается только о первом 128-секторе 2048 байтного блока.
+	MOV	A, C
+	JMP	SendByte
+	CALL	SwitchRecv
+	CALL	WaitForReady
+	CPI	STA_OK_BLOCK
+	RNZ;	EndCommand	; NZ on exit (error)
+	LXI	d,128
+	LHLD	dmaadr
+	MOV	B,H
+	MOV	C,L
+	JMP	SendBlock
+ENDIF
+
+
 ;--------------------------------------------------------------------------------
 CmdGetDate:
 	MVI	A,2Ah

@@ -683,7 +683,7 @@ ccpstart:
 ccp:
 	;enter here on each command or error condition
 	lxi	sp,stack
-	call	ccp_crlf		;print d> prompt, where d is disk name
+	call	BIOS_SHELL;ccp_crlf		;print d> prompt, where d is disk name
 	call	cselect		;get current disk number
 	adi	'A'
 	call	printchar

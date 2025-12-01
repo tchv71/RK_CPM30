@@ -60,6 +60,10 @@ test	equ	off
 bdos_start	equ	($ AND 0ff00h)+100h
 	DS	bdos_start-$
 D_BASE:
+;	enter here from the user's program with function number in c,
+;	and information address in d,e
+	jmp	bdose	;past parameter block
+
 ssize	equ	24		;24 level stack
 
 ;	low memory locations
@@ -107,10 +111,6 @@ ctl	equ	5eh	;up arrow
 ;	db	0	; CP/M version, 16h = 2.2
 ;	db	0	; OEM number, high byte
 ;	db	0,0,0	; serial number, big-endian
-
-;	enter here from the user's program with function number in c,
-;	and information address in d,e
-	jmp	bdose	;past parameter block
 
 ;	************************************************
 ;	*** relative locations 0009 - 000e           ***

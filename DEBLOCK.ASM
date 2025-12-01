@@ -448,12 +448,20 @@ sekhst:	ds	1		;seek shr secshf
 hstact:	ds	1		;host active flag
 hstwrt:	ds	1		;host written flag
 ;
+IF 0
 unacnt:	ds	1		;unalloc rec cnt
 unadsk:	ds	1		;last unalloc disk
 unatrk:	ds	2		;last unalloc track
 unasec:	ds	1		;last unalloc sector
-;
 erflag:	ds	1		;error reporting
+ELSE
+unacnt		EQU	0f770H	;unalloc rec cnt
+unadsk		EQU	0f771H	;last unalloc disk
+unatrk		EQU	0f772H	;last unalloc track
+unasec		EQU	0f774H	;last unalloc sector
+erflag		EQU	0f775H	;error reporting
+ENDIF
+;
 rsflag:	ds	1		;read sector flag
 readop:	ds	1		;1 if read operation
 wrtype:	ds	1		;write operation type

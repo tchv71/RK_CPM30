@@ -128,6 +128,7 @@ CorrTbl:
 	db	1Ah+80h,'C'-40h ; ^Down
 	db	8+80h,	'A'-40h	; ^Left
 	db	18h+80h,'F'-40h	; ^Right
+	db	13+80h, 10      ; ^Enter
 ;*** Other keys ***
 	db	7fh,	8
 
@@ -172,7 +173,7 @@ IFDEF	VDP9918
 pnc03:
 	POP	PSW
 ENDIF
-	LHLD	CHPNT
+	call	GetCurPos
 	CALL	OUTC
 	SHLD	CHPNT
 IFDEF	VDP9918
@@ -219,6 +220,10 @@ ENDIF
 	POP	B
 	POP	H
 	RET
+
+GetCurPos:
+	LHLD	CHPNT
+	ret
 
 ClearCursor:
 	LHLD	CURADR
@@ -281,13 +286,13 @@ ENDIF
 	jz	LEFT
 	cpi	'D'
 	jz	Right
-	CPI	45H
+	CPI	45H ; 'E'
 	JZ	CLS
-	SUI	4BH
+	SUI	4BH ; 'K'
 	JZ	DELEOL
-	DCR	A
-	JZ	INSLIN
-	DCR	A
+	DCR	A   ; 'L'
+	JZ	INSLIN 
+	DCR	A   ; 'M'
 	RNZ
 ; Delete line contained the cursor
 DELLIN:	PUSH	H
@@ -374,8 +379,6 @@ ShowCursor:
 	mvi	a,1
 	sta	CursorShowed
 	ret
-CursorShowed:
-	db	1
 
 GetCursPos:
 	PUSH	H
@@ -397,6 +400,8 @@ GetCursPos:
 	MOV	M,A
 	INX	H
 	MVI	M,0
+	XRA	A
+	STA	?ESC
 	POP	B
 	POP	H
 	RET
@@ -577,7 +582,7 @@ ENDIF
 
 ; DELETE TO END OF LINE
 DELEOL:	PUSH	H
-	LHLD	CHPNT
+	call	GetCurPos
 	LDA	CURX
 IFNDEF	VDP9918
 	JMP	FILL
@@ -851,7 +856,7 @@ ENDIF
 	XCHG
 	RET
 IFNDEF	VDP9918
-SCRLL:	LHLD	CHPNT
+SCRLL:	call	GetCurPos
 	JMP	SCROLL
 ENDIF
 NO_EI:	DB	1
@@ -1348,19 +1353,36 @@ XSIZE:	DB	SCR_W
 YSIZE:	DB	SCR_H
 ;***************************************
 
+;extern uint8_t BIOS_COLOR __address(0xF759);
+;extern uint16_t BIOS_CURSOR __address(0xF75A);
+;extern uint8_t BIOS_CURSOR_VISIBLE __address(0xF75E);
+
+IF 0
+CURATR:	DB	04Fh
+CURX:	DB	SCR_W	; Current cursor location ( from DOWN-RIGHT corner)
+CURY:	DB	SCR_H
+CursorShowed:
+	db	1
 ; Internal variables
 CHPNT:	DW	VRAM	; Current position in screen buffer
 ?ESC:	DB	0	; ESC sequence flag
 ?EscColor:
 	DB	0	; ESC color sequence flag
-
-CURX:	DB	SCR_W	; Current cursor location ( from DOWN-RIGHT corner)
-CURY:	DB	SCR_H
 STRADR:	DW	VRAM	; Start of current line
+ELSE
+CURATR		EQU	0F759h
+CURX		EQU	0F75Ah	; Current cursor location ( from DOWN-RIGHT corner)
+CURY		EQU	CURX+1
+CursorShowed	EQU	0F75Eh
+; Internal variables
+CHPNT		EQU	0F760h	; Current position in screen buffer
+?ESC		EQU	0F762h	; ESC sequence flag
+?EscColor	EQU	0F763h	; ESC color sequence flag
+STRADR		EQU	0F764h	; Start of current line
+ENDIF
 IFDEF	VDP9918
 CURADR:	DW	VRAM
 CURSYM:	DB	0
-CURATR:	DB	04Fh
 ENDIF
 STRBUF:	DS	PHYS_W*2
 ScrAttr:	DW	T_WHITE OR (T_DK_BLUE SHL 4)

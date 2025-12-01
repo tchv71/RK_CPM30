@@ -127,14 +127,89 @@ ENDIF
 	MOV	M,D
 	INX	H
 	RET
+.Z80
+NC_DONT_EXEC	EQU	0F740h
+NC_USERNO	EQU	0F741h
+INBUFF		EQU	comlen-1
+USERNO		EQU	usrcode
+TDRIVE		EQU	4		;current drive name and user number.
+INPOINT		EQU	comaddr
+ARG_DMA		EQU	dmaadr
+IOBYTE		EQU	ioloc
 
+BIOS_SHELL:
+	LD	A, (NC_DONT_EXEC)
+	OR	A
 
+	;JP	 ccp_crlf
+	JP	NZ, ccp_crlf
+
+	; Запустить NC.COM с диска A:
+	LD	HL, 4 OR ('A' SHL 8)
+	LD	(INBUFF + 1), HL
+	LD	HL, ':' OR ('N' SHL 8)
+	LD	(INBUFF + 3), HL
+	LD	HL, 'C'
+	LD	(INBUFF + 5), HL
+
+	; Сохранение текущего пользователя/папки
+	LD	A, (USERNO)
+	OR	0E0h
+	LD	(NC_USERNO), A
+
+	; Выбор нулевого пользователя/корневой папки
+	LD	A, (TDRIVE)
+	AND	0Fh
+	LD	C, A
+	JP	RUNCOMMAND
+RUNCPM:
+	XOR A
+	LD	(INBUFF+1), A
+RUNCOMMAND:
+	LD  HL, INBUFF + 2
+	LD  (INPOINT), HL
+	LD	A,C
+	LD	(TDRIVE),A
+	LD	A,0C3h ; JMP OPCODE
+	LD	(0),A
+	LD	HL,WBOOT_ADR
+	LD	(1),HL
+	LD	(5),A
+	LD	HL,D_BASE;FBASE
+	LD	(6),HL
+	LD	HL,TBUFF
+	LD	(ARG_DMA),HL
+	LD	A,81h
+	LD	(IOBYTE),a
+	JP	ccpstart;COMMAND
+
+.8080
 ;------ FIRST TIME INITIALIZATION --------
 
 BOOT:
 	;JMP	0F86Ch
+
 	MVI	a,80h
 	@out	PALM_CNTRL
+
+	LXI	h,VRAM
+	SHLD	CHPNT
+	LXI	H, SCR_W + (SCR_H SHL 8)
+	SHLD	CURX
+	MVI	A,04Fh
+	STA	CURATR
+	LXI	H, CursorShowed
+	MVI	M,1
+	INX	H
+	INX	H
+	INX	H
+	INX	H
+	XRA	A
+	MOV	M,A
+	INX	H
+	MOV	M,A
+
+
 	LXI	SP,C_BASE-100h
 	CALL	DskInit;##
 	;CALL	SETSCR
