@@ -388,9 +388,7 @@ readhst:
 	MOV	B,A
 	LDA	hstdsk
 	CMP	B
-	JZ	@SD_S01
-	CALL	SD_I01
-@SD_S01:
+	CNZ	SD_I01
 	LHLD	hsttrk
 	DAD	H
 	DAD	H
