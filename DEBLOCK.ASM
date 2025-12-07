@@ -378,7 +378,8 @@ readhst:
 	call	@SD_SEEK
 	LXI	D,hstbuf
 	LXI	h,hstsiz
-	CALL	CmdRead
+	CALL	
+
 	XRA	A
 	sta	erflag
 	ret

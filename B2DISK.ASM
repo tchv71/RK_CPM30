@@ -6,7 +6,7 @@
 ; This module defines the following procedures :
 PUBLIC	DSKINIT 	; Disk initialisation
 ; CP/M BIOS functions
-PUBLIC	HOME@,SELDSK,SETDMA,SECTRN,SETTRK,SETREC,RD_REC,WR_REC
+;PUBLIC	HOME@,SELDSK,SETDMA,SECTRN,SETTRK,SETREC,RD_REC,WR_REC
 
 DSKVER::	DB	10,13,'Disk BIOS V3.3(SD-DMA) 10-nov-2024',0
 
@@ -155,29 +155,34 @@ DPBLK3:
 ;-------- DISK INITIALIZATION ----------
 DskInit:
 	XRA	A
-	STA	OLDDSK
-	STA	OLDF40
+	;STA	OLDDSK
+	;STA	OLDF40
         ;call	RamD_I
 	;call	SD_I
         jmp	FlpD_I
 
 ;------ SOME CP/M BIOS FUNCTIONS -------
+IFDEF DEBLOCK_ON_PICO
+HOME@:	push	h
+	lxi	h, 0
+settrk0:
+	shld	ARG_TRACK
+	pop	h
+	ret
 
-HOME@:	CALL	@home@
-	LXI	B,0
-SETTRK:	jmp	@settrk
+SETTRK:	push	h
+	mov	h, b
+	mov	l, c
+	jmp	settrk0
 
-
-SELDSK:	call	@seldsk
+SELDSK:	;call	@seldsk
+	;CALL	CmdBiosSelDsk
 	LXI	H,0
 	MOV	A,C
-	STA	CPM_DISK
 	;CALL	CHECK_D
-	LDA	CPM_DISK
 	CPI	3;MaxDiskCode-'A'+1
-	;ORA	A
 	RNC
-	LDA	CPM_DISK
+	STA	ARG_SELDSK
 	MOV	L,A
 	MVI	H,0
 	DAD	H
@@ -188,100 +193,26 @@ SELDSK:	call	@seldsk
 	DAD	D
 	RET
 
-CHECK_D::
-	LDA	OLDDSK
-	MOV	B,A
-	LDA	CPM_DISK
-	CMP	B
-	RZ
-	STA	OLDDSK
-	RET
-	CPI	RAMDISK
-	RZ
-	CPI	SD
-	RZ
-	PUSH	PSW	; CHANGE FLOPPY DRIVE
-	CALL	FLSH_WB
-	CALL	WT_END_CMD
-	MVI	A,WRITING
-	STA	LAST_OPER
-	POP	PSW
-	CPI	FLOP80
-	MOV	B,A
-	MVI	A,2
-	STA	DRIVE
-	JZ	ChgDrive
-	LDA	OLDDSK
-	CPI	'E'-'A'
-	LDA	DRIVE
-	JZ	ChgDrive
 
-	MVI	A,1
-	STA	DRIVE
-	LDA	OLDF40
-	CMP	B
-	LDA	DRIVE
-        JZ	ChgDrive
-	MOV	A,B
-	STA	OLDF40
-	PUSH	PSW
-	LDA	DRIVE
-	CALL	ChgDrive
-	CALL	PRNT;##
-	DB	10,13,'Ins disk ',0
-	POP	PSW
-	ADI	'A'
-	MOV	C,A
-	CALL	CONOUT;##
-	CALL	PRNT;##
-	DB	': & type a key',10,13,0
-	JMP	CONIN
-
-
-SETREC:	call	@setsec
-	LXI	H,CPM_RECORD
-	MOV	M,C
+SETREC:	;call	@setsec
+	;CALL	CmdBiosSetSect
+	PUSH	H
+	LXI	H,ARG_SECTOR_128
+	MOV	M, C
+	INX	H
+	MOV	M, B
+	POP	H
 	RET
 
 ;-----------------------------------------
 
 SECTRN:
-	jmp	@sectran
-ifdef	PROFI_DISKS
-	mov	a,c
-	inr	a
-	STA	CPM_RECORD
-	mov	l,a
+@sectran:
+	;translate sector number BC
+	mov	h,b
+	mov	l,c
 	ret
-else
-	LDA	CPM_DISK
-	CPI	FLOP80
-	PUSH	B
-	MOV	A,C
-	JNZ	NO_TRAN	; NO INTERLEAVE TRANSLATION
-
-; PERFORM INTERLEAVE (1:2) TRANSLATION
-	ANI	3	; SAVE 2 LOWEST BITS OF SECT NUMBER
-	MOV	B,A
-
-	MOV	A,C
-	XRA	B	; RESET THESE 2 BITS
-	CPI	36
-	JC	FIRST_HALF
-	SUI	36
-	ADD	A
-	ADI	4
-	JMP	$+4
-FIRST_HALF:
-	ADD	A
-	ORA	B	; RESTORE SAVED BITS
-
-NO_TRAN:INR	A
-	STA	CPM_RECORD
-	MOV	L,A
-	POP	B
-	RET
-endif
+IF 0
 ;---------------------------------
 SET_PARAMS::
 	lxi	h,FLP_TBL ; Floppy disk physical parameter table
@@ -306,11 +237,14 @@ noFLOP80:
 	inx	H
 	mvi	m,2
 	ret
-
+ENDIF
 ;-------------------------
 SETDMA:
 	PUSH	H
-	call	@setdma
+	;set dma address given by BC
+	mov	h,b
+	mov	l,c
+	shld	ARG_DMA
 	POP	H
 	RET
 
@@ -326,19 +260,13 @@ RD_REC:
 	PUSH	H
 	PUSH	D
 	PUSH	B
-	CALL	SD_R
+	CALL	CmdBiosRdRect
 	POP	B
 	POP	D
 	POP	H
+	ORA	A
+	RZ
 	RET
-
-	;LDA	CPM_DISK
-	;CPI	SD
-	;JMP	SD_R
-	;JZ	SD_R
-	;CPI	RAMDISK
-	;JZ	RamD_R
-	;jmp	FlpD_R
 
 ;**********************************************
 ; WRITE CURRENT RECORD TO DISK
@@ -348,22 +276,11 @@ WR_REC::
 	PUSH	H
 	PUSH	D
 	PUSH	B
-	CALL	SD_W
+	CALL	CmdBiosWrRect
 	POP	B
 	POP	D
 	POP	H
 	RET
-	LDA	CPM_DISK
-	CPI	SD
-	JMP	SD_W
-	;JZ	SD_W
-	;CPI	RAMDISK
-	;JZ	RamD_W	; Check for ramdisk call.
-	;jmp	FlpD_W
-
-
-OLDDSK::	DB	0	; LAST CP/M DISK
-
 
 
 BAD::	MVI	A,0FFH
@@ -378,18 +295,20 @@ BAD::	MVI	A,0FFH
 ;		CP/M DISK BIOS VARIABLES
 
 _IO_RESULT:DS	1
-SECT::	ds	1
-SIDE::	ds	1
-DRIVE:	ds	1
+;SECT::	ds	1
+;SIDE::	ds	1
+;DRIVE:	ds	1
+;CPM_DISK:
+;	ds	1		;seek disk number
+;CPM_RECORD:
+;	ds	1		;seek sector number
 
-;CPM_TRACK::	DB	0
-;CPM_RECORD::	DB	0
-;CPM_DISK::	DB	0
-
-;DMA_ADDR::	DW	0
-_DPTR:		DW	0
+;_DPTR:		DW	0
 
 ;STK_SAVE:	DS	2
-OLDF40::		ds	1
+ENDIF
+OLDDSK::	DB	0	; LAST CP/M DISK
+
+;OLDF40::		ds	1
 ;		END
 		

@@ -75,6 +75,7 @@ endif
 
 ; ***** Floppy disk module initialisation *****
 FlpD_I::
+IF 0
 	XRA	A	; NOTHING
 	STA	LAST_OPER
 	STA	SECTALL
@@ -84,6 +85,9 @@ FlpD_I::
 	SHLD	CUR_BF
 	LXI	H,SECB2
 	SHLD	NXT_BF
+ENDIF
+	XRA	A	; NOTHING
+	STA	OLDDSK
 	ret
        
 

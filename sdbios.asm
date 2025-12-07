@@ -194,70 +194,100 @@ ELSE
 	MOV	A, D
 	ORA	E
 	JNZ 	CmdWriteFile1
+ENDIF
 
 	JMP	CmdWriteFile2
-ENDIF
-IF 0
+
+IFDEF DEBLOCK_ON_PICO
+
+@CmdHome	equ	10
+@CmdSelDsk	equ	11
+@CmdSetTrk	equ	12
+@CmdSetSect	equ	13
+@CmdRdRect	equ	14
+@CmdWrRect	equ	15
+
+
+CmdBiosHome:
+	MVI	a, @CmdHome
+	CALL	StartCommand
+	XRA	A
+	RET
+
 CmdBiosSelDsk:
 	; Command code
-	MVI	A, 10
+	MVI	A, @CmdSelDsk
 CmdBiosXX:
 	CALL	StartCommand
 
 	MOV	A, C
-	JMP	SendByte
+	CALL	SendByte
+	XRA	A
+	RET
 
 CmdBiosSetTrk:
 	; Command code
-	MVI	A, 11
+	MVI	A, @CmdSetTrk
 	CALL	StartCommand
 
 	MOV	L, C
 	MOV	H, B
-	JMP	SendWord
+	CALL	SendWord
+	XRA	A
+	RET
 
 CmdBiosSetSect:
 	; Command code
-	MVI	A, 12
+	MVI	A, @CmdSetSect
 	JMP	CmdBiosXX
 
 CmdBiosRdRect:
 	; Command code
-	MVI	A, 13
+	MVI	A, @CmdRdRect
 	CALL	StartCommand
-
+	LXI	b, ARG_SELDSK
+	LXI	d, 5
+	call	SendBlock
 	CALL	SwitchRecv
 	CALL	WaitForReady
 	CPI	STA_OK_BLOCK
-	RNZ;	EndCommand	; NZ on exit (error)
+	RNZ	; NZ on exit (error)
 	LXI	d,128
-	LHLD	dmaadr
+	LHLD	ARG_DMA
 	MOV	B,H
 	MOV	C,L
-	JMP	RecvBlock
-
+	CALL	RecvBlock
+CmdBiosCheck:
+	CALL	RecvByte
+	CPI	STA_OK_CMD
+	RNZ
+	XRA	A
+	RET
 
 CmdBiosWrRect:
 	; Command code
-	MVI	A, 14
+	MVI	A, @CmdWrRect
 	CALL	StartCommand
-
 	; Дополнительная информация от CP/M:
 	; 0 - Запись данных можно отложить
 	; 1 - Нужно записать все данные на дискету сейчас
 	; 2 - Запись в блок файловой системы,который до этого не использовался
 	; Сообщается только о первом 128-секторе 2048 байтного блока.
 	MOV	A, C
-	JMP	SendByte
+	LXI	b, WRITE_MODE
+	LXI	d, 6
+	call	SendBlock
 	CALL	SwitchRecv
 	CALL	WaitForReady
 	CPI	STA_OK_BLOCK
-	RNZ;	EndCommand	; NZ on exit (error)
+	RNZ; NZ on exit (error)
 	LXI	d,128
-	LHLD	dmaadr
+	LHLD	ARG_DMA
 	MOV	B,H
 	MOV	C,L
-	JMP	SendBlock
+	CALL	SendBlock
+	jmp	CmdBiosCheck
+
 ENDIF
 
 

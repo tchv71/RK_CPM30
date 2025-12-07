@@ -108,5 +108,8 @@
     <None Include="fontMsx.asm">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="DEBLOCK2.ASM">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>
