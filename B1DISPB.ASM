@@ -32,10 +32,6 @@ ZZZZ	equ	09h	; Horizontal RVV time
 ZZZZ	equ	08h	; Horizontal RVV time
 	ENDIF
 ENDIF
-	DS	0F700h - $
-	; F700h - 0F77Fh - gap for bios variables
-	DS	80h
-
 Disp_PB::	db	S*128+PHYS_W-1
 		db	VV*64+PHYS_H-1	; Display parameters
 		db	UUUU*16+LLLL

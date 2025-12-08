@@ -12,6 +12,8 @@ BIOS_SELDSK:
 	CP	STORAGE_COUNT
 	LD	HL,0
 	RET	NC
+	;jp	c, $+4
+	;XOR	A
 
 	LD	(ARG_SELDSK),A
 	LD	L,A		; calc DPH address
@@ -74,7 +76,7 @@ BIOS_SECTRN:
 	RET
 
 BIOS_PRSTAT:
-	xor  a ; Принтер не готов
+	xor  a ; Printer is not ready
 	ret
 
 ;
@@ -90,46 +92,50 @@ BIOS_WRITE:
 	PUSH	DE
 	PUSH	HL
 
-	; Дополнительная информация от CP/M:
-	; 0 - Запись данных можно отложить
-	; 1 - Нужно записать все данные на дискету сейчас
-	; 2 - Запись в блок файловой системы,который до этого не использовался
-	; Сообщается только о первом 128-секторе 2048 байтного блока.
+	; Additional information from CP/M:
+	; 0 - Data writing can be delayed
+	; 1 - We must write all data to disk just now
+	; 2 - Writing to file system block not used before
+	; Reported about first 128-byte sector from 2048-byte block.
 	LD	A,C
 	LD	(WRITE_MODE),A
 
-	; Если это запись в блок файловой системы, который до этого не
-	; использовался, то взводится счетчик блокирующий чтение с дискеты
+	; If we writing to file system block not used before
+	; set flag not to read from disc
 	CP	2
 	JP	Z,BIOS_WRITE_FIRST_NEW
 
-	; Если счетчик равен нулю, то читаем как обычно
+	; If counter is zero - reading as usual
 	LD	A,(NEW_COUNT)
 	OR	A
 	JP	Z,BIOS_WRITE_STOP_NEW
 
-	; С каждой записью уменьшается счетчик
+	; Each writing decrements the counter
 	DEC	A
 	LD	(NEW_COUNT),A
 
-	; Если изменился диск, дорожка или сектор, то счетчик сбрасывается
+	; If disk, track or sector is changed - counter is cleared
 	LD	A,(NEW_DISK)
 	LD	HL,ARG_SELDSK
 	CP	(HL)
 	JP	NZ,BIOS_WRITE_STOP_NEW
 
 	LD	HL,(NEW_TRACK)
-	LD	DE,ARG_TRACK
+	EX	DE, HL
+	LD	HL,(ARG_TRACK)
+	EX	DE, HL
 	CALL	CMP_HL_PDE
 	JP	NZ,BIOS_WRITE_STOP_NEW
 
 	LD	HL,(NEW_SECTOR)
-	LD	DE,ARG_SECTOR_128
+	EX	DE, HL
+	LD	HL,(ARG_SECTOR_128)
+	EX	DE, HL
 	CALL	CMP_HL_PDE
 	JP	NZ,BIOS_WRITE_STOP_NEW
 
 BIOS_WRITE_NEW:
-	; С каждой записью увеличивается номер сектора
+	; Each writing increment the sector number
 	INC	HL
 	LD	(NEW_SECTOR),HL
 
@@ -140,13 +146,13 @@ BIOS_WRITE_NEW:
 	CALL	CMP_HL_PDE
 	JP	NZ,BIOS_WRITE_TRACK
 	LD	HL,0
-	LD	(NEW_SECTOR),HL ; TODO: Можно сохранять один раз в конце
+	LD	(NEW_SECTOR),HL ; TODO: May save one time at the end
 	LD	HL,(NEW_TRACK)
 	INC	HL
 	LD	(NEW_TRACK),HL
 BIOS_WRITE_TRACK:
 
-	LD	BC,0  ; Режим работы - запись, чтение запрещено
+	LD	BC,0  ; Working mode - writing, reading is forbidden
 
 BIOS_WRITE_END:
 	CALL	BUFFER_WORK
@@ -154,7 +160,6 @@ BIOS_WRITE_END:
 	POP     HL
 	POP     DE
 	POP     BC
-	XOR	A
 	RET
 
 BIOS_WRITE_FIRST_NEW:
@@ -171,10 +176,10 @@ BIOS_WRITE_FIRST_NEW:
 	JP	BIOS_WRITE_NEW
 
 BIOS_WRITE_STOP_NEW:
-	; Сброс счетчика блокирующего чтение с дискеты
+	; Clear the counter blocking reading from disc
 	XOR	A
 	LD	(NEW_COUNT),A
-	LD	BC,1  ; Режим работы - обычная запись
+	LD	BC,1  ;  Working mode - usual writing
 	JP	BIOS_WRITE_END
 
 ;**************************************************************
@@ -184,7 +189,7 @@ BIOS_READ:
 	PUSH	DE
 	PUSH	HL
 
-	; Сброс счетчика блокирующего чтение с дискеты
+	; Clear the counter blocking reading from disc
 	XOR	A
 	LD	(NEW_COUNT),A
 
@@ -204,13 +209,13 @@ BIOS_READ:
 ;
 
 BUFFER_READ:
-	; Режим работы - чтение с дискеты в буфер
+	; Working mode -  reading from disc to buffer
 	LD	A,2
 	LD	(WRITE_MODE),A
 	LD	BC,101h
 
 BUFFER_WORK:
-	; Вычисление номера реального 512-байтного сектора
+	; Compute the real 512-byte sector number
 	LD  D, C
 	LD	HL,(ARG_SECTOR_128)
 	LD  C, 2
@@ -218,13 +223,13 @@ BUFFER_WORK:
 	LD	(ARG_SECTOR_512),HL
 	LD  C, D
 
-	; Если в буфере нет данных, то переходим на загрузку
+	; If there is no data in buffer - jump to loading
 	LD	A,(BUFFER_DISK)
 	CP	-1
 	JP	Z,BUFFER_WORK_3
 
-	; Если в буфере не тот диск, дорожка, сектор, то сохраняем буфер
-	; и загружем другой сектор
+	; If there is another disc, track or sector in buffer - save buffer
+	; and load another sector
 	LD	HL,ARG_SELDSK
 	CP	(HL)
 	JP	NZ,BUFFER_WORK_2
@@ -240,7 +245,7 @@ BUFFER_WORK:
 	JP	Z,BUFFER_WORK_5
 
 BUFFER_WORK_2:
-	; Если нужно сохранить буфер, то сохраняем
+	; If we need to save buffer - do this
 	LD	A,(BUFFER_CHANGED)
 	OR	A
 	CALL	NZ,BUFFER_WORK_7
@@ -248,7 +253,7 @@ BUFFER_WORK_2:
 	RET	NZ
 
 BUFFER_WORK_3:
-	; Информация о новом секторе
+	; Information about new sector
 	XOR	A
 	LD	(BUFFER_CHANGED),A
 	LD	A,(ARG_SELDSK)
@@ -258,7 +263,7 @@ BUFFER_WORK_3:
 	LD	HL,(ARG_SECTOR_512)
 	LD	(BUFFER_SECTOR),HL
 
-	; Если разрешено загрузить в буфер, то загружаем
+	; If loading to buffer is allowed - do this
 	LD	A,C
 	OR	A
 	PUSH	BC
@@ -267,13 +272,13 @@ BUFFER_WORK_3:
 	OR	A
 	JP  Z,BUFFER_WORK_5
 
-	; Очистить буфер, если не удалось прочитать
+	; Clear the buffer if the reading failed
 	LD	A,-1
 	LD	(BUFFER_DISK),A
 	RET
 
 BUFFER_WORK_5:
-	; Вычисляем адрес 128 байтного сектора в буфере
+	; Compute 128-byte sector address in buffer
 	LD	A,(ARG_SECTOR_128)
 	AND	3
 	LD	H,A
@@ -284,10 +289,10 @@ BUFFER_WORK_5:
 	ADD	HL,DE
 	EX	DE,HL
 
-	; Читаем или записываем 128 байтный сектор
+	; Read or write 128-byte sector
 	LD	HL,(ARG_DMA)
 	LD	C,CPM_SECTOR_SIZE
-	LD	A,B ; 0 - запись, 1 - чтение
+	LD	A,B ; 0 - writing, 1 - reading
 	OR	A
 	JP	NZ,BUFFER_WORK_6
 	LD	A,1
@@ -301,14 +306,14 @@ BUFFER_WORK_6:
 	DEC	C
 	JP	NZ,BUFFER_WORK_6
 
-	; Если CP/M не требует сохранить буфер сейчас,то выходим
-	LD	A,(WRITE_MODE) ; Разместить в регистре WRITE_MODE
+	; If CP/M does not require to save the buffer just now, we can exit
+	LD	A,(WRITE_MODE)
 	CP	1
 	LD	A,0
 	RET	NZ
 
 BUFFER_WORK_7:
-	; Записываем сектор на дискету
+	; Write the sector to disc
 	;PUSH	BC
 	XOR	A
 	LD	(BUFFER_CHANGED),A
@@ -318,31 +323,16 @@ BUFFER_WORK_7:
 
 
 BIOS_READ_512:
-	;PUSH	HL
-	;PUSH	DE
-	;PUSH	BC
 	CALL	SD_SEEK
 	LD	DE, BUFFER
 	LD	HL, 512
-	CALL	CmdRead
-	;POP	BC
-	;POP	DE
-	;POP	HL
-	RET
+	JP	CmdRead
 
 BIOS_WRITE_512:
-	;PUSH	HL
-	;PUSH	DE
-	;PUSH	BC
 	CALL	SD_SEEK
 	LD	DE, BUFFER
 	LD	HL, 512
-	CALL	CmdWrite
-	;POP	BC
-	;POP	DE
-	;POP	HL
-	RET
-
+	JP	CmdWrite
 ;
 ;**************************************************************
 ;*
