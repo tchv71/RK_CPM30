@@ -44,6 +44,7 @@ _Rk60k: RkConfig60k.mac
 CPM/$(NAME).rkl: _palmiraCPM CPMPC.BIN
 	../makerk/Release/makerk.exe 100 CPMPC.BIN CPM/$(NAME).rkl
 	../m80noi/x64/Release/m80noi.exe cpm.prn
+	CPM\ftp.bat
 
 CPM/CPM_P.rkl: _palmira CPMP.BIN
 	../makerk/Release/makerk.exe 100 CPMP.BIN $@

@@ -249,6 +249,7 @@
     <None Include="BDOS.ASM" />
     <None Include="CCP.ASM" />
     <None Include="Cpm.ASM" />
+    <None Include="CPM\ftp.bat" />
     <None Include="DEBLOCK.ASM" />
     <None Include="DEBLOCK2.ASM" />
     <None Include="E0GETC.ASM" />
@@ -265,6 +266,9 @@
     <None Include="SCREEN.MAC" />
     <None Include="sdbios.asm" />
     <None Include="tmsfont.asm" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CPM\ftp.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -185,20 +185,20 @@ BIOS_WRITE_STOP_NEW:
 ;**************************************************************
 
 BIOS_READ:
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
+	;PUSH	BC
+	;PUSH	DE
+	;PUSH	HL
 
 	; Clear the counter blocking reading from disc
 	XOR	A
 	LD	(NEW_COUNT),A
 
-	CALL	BUFFER_READ
+	;JP	BUFFER_READ
 
-	POP     HL
-	POP     DE
-	POP     BC
-	RET
+	;POP     HL
+	;POP     DE
+	;POP     BC
+	;RET
 
 ;
 ;**************************************************************
@@ -235,12 +235,16 @@ BUFFER_WORK:
 	JP	NZ,BUFFER_WORK_2
 
 	LD	HL,(ARG_TRACK)
-	LD	DE,BUFFER_TRACK
+	EX	DE, HL
+	LD	HL,(BUFFER_TRACK)
+	EX	DE, HL
 	CALL	CMP_HL_PDE
 	JP	NZ,BUFFER_WORK_2
 
 	LD	HL,(ARG_SECTOR_512)
-	LD	DE,BUFFER_SECTOR
+	EX	DE, HL
+	LD	HL,(BUFFER_SECTOR)
+	EX	DE, HL
 	CALL	CMP_HL_PDE
 	JP	Z,BUFFER_WORK_5
 
@@ -314,11 +318,11 @@ BUFFER_WORK_6:
 
 BUFFER_WORK_7:
 	; Write the sector to disc
-	;PUSH	BC
+	PUSH	BC
 	XOR	A
 	LD	(BUFFER_CHANGED),A
 	CALL	BIOS_WRITE_512
-	;POP	BC
+	POP	BC
 	RET
 
 

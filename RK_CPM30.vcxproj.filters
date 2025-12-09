@@ -111,5 +111,13 @@
     <None Include="DEBLOCK2.ASM">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="CPM\ftp.bat">
+      <Filter>Исходные файлы</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CPM\ftp.txt">
+      <Filter>Исходные файлы</Filter>
+    </Text>
   </ItemGroup>
 </Project>
