@@ -50,14 +50,15 @@ include 9918.asm
 tmsFont:
 include font8x16.asm
 tmsFontEnd:
-	DS	0F700h - $
-	; F700h - 0F77Fh - gap for bios variables
-	DS	80h
-
+IFDEF	MSX
 tmsFont8:
 include fontMsx.asm
 tmsFont8End:
-
+ENDIF
+	DS	0F700h - $
+	; F700h - 0F77Fh - gap for bios variables
+	DS	80h
+BUFFER:		DS	1024;512
 ENDIF
 BIOS_END:
 IFDEF VDP9918

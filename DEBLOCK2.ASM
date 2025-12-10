@@ -140,13 +140,13 @@ BIOS_WRITE_NEW:
 	CALL	CMP_HL_PDE
 	JP	NZ,BIOS_WRITE_TRACK
 	LD	HL,0
-	LD	(NEW_SECTOR),HL ; TODO: May save one time at the end
+	LD	(NEW_SECTOR),HL	; TODO: May save one time at the end
 	LD	HL,(NEW_TRACK)
 	INC	HL
 	LD	(NEW_TRACK),HL
 BIOS_WRITE_TRACK:
 
-	LD	BC,0  ; Working mode - writing, reading is forbidden
+	LD	BC,0	; Working mode - writing, reading is forbidden
 
 BIOS_WRITE_END:
 	CALL	BUFFER_WORK
@@ -158,8 +158,8 @@ BIOS_WRITE_END:
 
 BIOS_WRITE_FIRST_NEW:
 	LD	HL,(ARG_DPB)
-	LD  DE,	3
-	ADD HL, DE
+	LD	DE,	3
+	ADD	HL, DE
 	LD	A,(HL)	; Get block mask. 7 => 1k, 0Fh => 2k, 1Fh => 4k...
 	LD	(NEW_COUNT),A
 	LD	A,(ARG_SELDSK)
@@ -179,20 +179,11 @@ BIOS_WRITE_STOP_NEW:
 ;**************************************************************
 
 BIOS_READ:
-	;PUSH	BC
-	;PUSH	DE
-	;PUSH	HL
-
 	; Clear the counter blocking reading from disc
 	XOR	A
 	LD	(NEW_COUNT),A
 
 	;JP	BUFFER_READ
-
-	;POP	HL
-	;POP	DE
-	;POP	BC
-	;RET
 
 ;
 ;**************************************************************

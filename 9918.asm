@@ -318,10 +318,11 @@ T_InitialiseText80:
 	POP	PSW
 	CPI	80H
 	JZ	font16
+IFDEF	MSX
 	LXI	H, tmsFont8
 	LXI	D, tmsFont8End - tmsFont8
 	CALL	T_WriteBytes
-
+ENDIF
 	LXI	B, (T_REG_0 SHL 8) OR T_R0_EXT_VDP_DISABLE OR T_R0_MODE_TEXT80
 	CALL	T_WriteRegValue
 	JMP	Reg0Ok
