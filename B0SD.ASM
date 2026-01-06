@@ -173,6 +173,7 @@ SD_S03:
 	;DCR	A
 	;RAR
 	RAL
+	RAL
 	MOV	B,A
 	;MVI	A,0
 	;RAR

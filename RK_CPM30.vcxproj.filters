@@ -114,9 +114,15 @@
     <None Include="CPM\ftp.bat">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="CPM\ftpds.bat">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CPM\ftp.txt">
+      <Filter>Исходные файлы</Filter>
+    </Text>
+    <Text Include="CPM\ftpds.txt">
       <Filter>Исходные файлы</Filter>
     </Text>
   </ItemGroup>

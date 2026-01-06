@@ -3,7 +3,7 @@ PORT=COM5:
 ASMDEP=Cpm.ASM CCP.ASM BDOS.ASM B1MAIN.ASM B2DISK.ASM FDCNTR.ASM B1CONIO.ASM B1DISPB.ASM B1LSTAUX.ASM B0FLPDSK.ASM B0RAMDSK.ASM sdbios.asm b0FlpDmy.asm B0SD.ASM b0disk.mac RK86.MAC SCREEN.MAC E0GETC.ASM B0PRGDC.ASM RkConfig.mac DEBLOCK2.ASM 9918.asm tmsfont.asm font8x16.asm
 M80PATH=D:/M80
 # CPM{D-DMA;M-MSX 9918}
-NAME=CPMDSM
+NAME=CPMDS
 
 ALL:	CPM/$(NAME).rkl
 
@@ -44,7 +44,7 @@ _Rk60k: RkConfig60k.mac
 CPM/$(NAME).rkl: _palmiraCPM CPMPC.BIN
 	../makerk/Release/makerk.exe 100 CPMPC.BIN CPM/$(NAME).rkl
 	../m80noi/x64/Release/m80noi.exe cpm.prn
-	CPM\ftp.bat
+	CPM\ftpds.bat
 
 CPM/CPM_P.rkl: _palmira CPMP.BIN
 	../makerk/Release/makerk.exe 100 CPMP.BIN $@

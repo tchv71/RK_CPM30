@@ -39,6 +39,8 @@ T_REG_SPRITE_ATTR_TABLE	EQU	T_REG_5
 T_REG_SPRITE_PATT_TABLE	EQU	T_REG_6
 T_REG_FG_BG_COLOR	EQU	T_REG_7
 
+T_REG_SCROLL_Y		EQU	60
+
 T_R0_MODE_GR_I		EQU	00
 T_R0_MODE_GR_II		EQU	02
 T_R0_MODE_MULTICOLOR	EQU	00
@@ -140,6 +142,7 @@ T_Fill02:
 	ORA	C
 	JNZ	T_Fill02
 	RET
+
 ; HL - buffer in RAm
 ; DE - byte count
 T_WriteBytes:
@@ -297,20 +300,9 @@ T_InitialiseText80:
 	PUSH	PSW
 
 
-; non-bitmap color and pattern table configuration
-	MVI	B, T_REG_COLOR_TABLE
-	MVI	C, T_T80_VRAM_COLOR_ADDRESS / 40h
-	CALL	T_WriteRegValue
-
-	; set up pattern table address (register = address / 800H)
-	MVI	B, T_REG_PATTERN_TABLE
-	MVI	C, T_T80_VRAM_PATT_ADDRESS / 800h
-	CALL	T_WriteRegValue
-
-	; set up name table address (register = address / 400H)
-	MVI	B, T_REG_NAME_TABLE
-	MVI	C, (T_T80_VRAM_NAME_ADDRESS / 400h) AND 0fh;7Ch OR 3 
-	CALL	T_WriteRegValue
+	; non-bitmap color and pattern table configuration
+	LXI	H,InitTbl11
+	CALL	T_SetRegs
 
 	LXI	B, T_T80_VRAM_PATT_ADDRESS ; load font from address in bc
 	CALL	T_SetAddrWrite
@@ -336,9 +328,30 @@ font16:
 	CALL	T_WriteRegValue
 
 reg0ok:
-	LXI	B, (T_REG_1 SHL 8) OR T_R1_MODE_TEXT OR T_R1_DISP_ACTIVE; OR T_R1_INT_ENABLE
-	CALL	T_WriteRegValue
+	LXI	H, InitTbl12
 
-	LXI	B, (T_REG_FG_BG_COLOR SHL 8) OR T_DK_BLUE OR (T_WHITE SHL 4)
-	JMP	T_WriteRegValue
+T_SetRegs:
+	MOV	B, M
+	INR	B
+	RZ
+	DCR	B
+	INX	H
+	MOV	C, M
+	INX	H
+	CALL	T_WriteRegValue
+	JMP	T_SetRegs
+
+InitTbl11:
+	DB	T_REG_COLOR_TABLE,	T_T80_VRAM_COLOR_ADDRESS / 40h
+	DB	T_REG_PATTERN_TABLE,	T_T80_VRAM_PATT_ADDRESS / 800h
+	DB	T_REG_NAME_TABLE,	LOW ( (T_T80_VRAM_NAME_ADDRESS / 400h) AND 0fh);7Ch OR 3
+	DB	0FFh
+
+InitTbl12:
+	DB	T_REG_0,		T_R0_EXT_VDP_DISABLE OR T_R0_MODE_TEXT80 OR T_R0_MODE_TEXT8_80
+	DB	T_REG_1,		T_R1_MODE_TEXT OR T_R1_DISP_ACTIVE; OR T_R1_INT_ENABLE
+	DB	T_REG_FG_BG_COLOR,	T_DK_BLUE OR (T_WHITE SHL 4)
+	DB	39h, 1Ch 
+	DB	39h, 1Ch 
+	DB	0FFh
 

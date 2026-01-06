@@ -98,9 +98,15 @@ ENDIF
 	; The result
 	JMP	Ret0
 	
+IFNDEF DEBLOCK_ON_PICO
+BIOS_READ_512:
+	CALL	SD_SEEK
+	lxi	D, BUFFER
+	lxi	H, 1024;512
+ENDIF
+
 ;----------------------------------------------------------------------------
 ; HL-size, DE-address / HL-how much was loaded, A-error code
-
 CmdRead:
 	; Command code
 	MVI	A, 6
@@ -147,9 +153,16 @@ RecvBuf0:
 ELSE
 	JMP	RecvBuf
 ENDIF
+
+
+IFNDEF DEBLOCK_ON_PICO
+BIOS_WRITE_512:
+	CALL	SD_SEEK
+	lxi	D, BUFFER
+	lxi	H, 1024;512
+ENDIF
 ;----------------------------------------------------------------------------
 ; HL-size, DE-address / A-error code
-
 CmdWrite:
 	; Command code
 	MVI	A, 7

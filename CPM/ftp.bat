@@ -1,0 +1,1 @@
+ftp.exe -A -s:CPM\ftp.txt

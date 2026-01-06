@@ -7,7 +7,7 @@ include SCREEN.MAC
 
 IFDEF	USE_PRG_DC
 	IFDEF	EXTERNAL_PORTS
-	START_CCP	EQU 0CF00H - 400H - 1300h ; Palmira with IN/OUT ports
+	START_CCP	EQU 0CF00H - 400H - 1100h ; Palmira with IN/OUT ports
 	ELSE
 	START_CCP	EQU 0CA00h - 400H ; Palmira with ports in F800-FFFF
 	ENDIF
@@ -55,11 +55,11 @@ tmsFont8:
 include fontMsx.asm
 tmsFont8End:
 ENDIF
-	DS	0F700h - $
-	; F700h - 0F77Fh - gap for bios variables
-	DS	80h
-BUFFER:		DS	1024;512
+	DS	0F740h - $
+	; F740h - 0F77Fh - gap for bios variables
+	DS	40h
 ENDIF
+BUFFER:		DS	1024;512
 BIOS_END:
 IFDEF VDP9918
 IF	BIOS_END LT 1000H

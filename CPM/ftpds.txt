@@ -1,0 +1,6 @@
+open 192.168.31.250
+cd CPM
+delete CPMDS.RKL
+send CPM/CPMDS.RKL
+close
+bye

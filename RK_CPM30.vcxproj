@@ -250,6 +250,7 @@
     <None Include="CCP.ASM" />
     <None Include="Cpm.ASM" />
     <None Include="CPM\ftp.bat" />
+    <None Include="CPM\ftpds.bat" />
     <None Include="DEBLOCK.ASM" />
     <None Include="DEBLOCK2.ASM" />
     <None Include="E0GETC.ASM" />
@@ -269,6 +270,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="CPM\ftp.txt" />
+    <Text Include="CPM\ftpds.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -200,13 +200,13 @@ BUFFER_READ:
 	LD	BC,101h
 
 BUFFER_WORK:
-	; Compute the real 512-byte sector number
-	LD  D, C
+	; Compute the real 512(1024)-byte sector number
+	LD	D, C
 	LD	HL,(ARG_SECTOR_128)
-	LD  C, 2
+	LD	C, 3;2
 	CALL	SHIFTR
 	LD	(ARG_SECTOR_512),HL
-	LD  C, D
+	LD	C, D
 
 	; If there is no data in buffer - jump to loading
 	LD	A,(BUFFER_DISK)
@@ -265,10 +265,10 @@ BUFFER_WORK_3:
 BUFFER_WORK_5:
 	; Compute 128-byte sector address in buffer
 	LD	A,(ARG_SECTOR_128)
-	AND	3
+	AND	7;3
 	LD	H,A
 	LD	L,0
-	LD  C, 1
+	LD	C, 1
 	CALL	SHIFTR
 	LD	DE,BUFFER
 	ADD	HL,DE
@@ -306,18 +306,6 @@ BUFFER_WORK_7:
 	POP	BC
 	RET
 
-
-BIOS_READ_512:
-	CALL	SD_SEEK
-	LD	DE, BUFFER
-	LD	HL, 512
-	JP	CmdRead
-
-BIOS_WRITE_512:
-	CALL	SD_SEEK
-	LD	DE, BUFFER
-	LD	HL, 512
-	JP	CmdWrite
 ;
 ;**************************************************************
 ;*
