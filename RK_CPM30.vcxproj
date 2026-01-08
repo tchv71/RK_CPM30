@@ -249,14 +249,15 @@
     <None Include="BDOS.ASM" />
     <None Include="CCP.ASM" />
     <None Include="Cpm.ASM" />
+    <None Include="CPM\cpmdsm.bat" />
     <None Include="CPM\ftp.bat" />
     <None Include="CPM\ftpds.bat" />
     <None Include="DEBLOCK.ASM" />
     <None Include="DEBLOCK2.ASM" />
     <None Include="E0GETC.ASM" />
     <None Include="FDCNTR.ASM" />
+    <None Include="font6x8.asm" />
     <None Include="font8x16.asm" />
-    <None Include="fontMsx.asm" />
     <None Include="Makefile" />
     <None Include="README.md" />
     <None Include="RK86.MAC" />
@@ -271,6 +272,7 @@
   <ItemGroup>
     <Text Include="CPM\ftp.txt" />
     <Text Include="CPM\ftpds.txt" />
+    <Text Include="CPM\ftpdsm3.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

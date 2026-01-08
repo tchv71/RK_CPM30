@@ -153,7 +153,7 @@ BIOS_SHELL:
 	LD	A, (NC_DONT_EXEC)
 	OR	A
 
-	;JP	 ccp_crlf
+	JP	 ccp_crlf
 	JP	NZ, ccp_crlf
 
 	; Запустить NC.COM с диска A:

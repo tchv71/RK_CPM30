@@ -1,9 +1,12 @@
 OWN_GETC	EQU	1
 USE_PRG_DC	EQU	1
 CONSOLE80	EQU	1
-;VDP9918		EQU	1
+VDP9918		EQU	1
 FONT8X16	EQU	1
-VDP_TEXT_SCROLL	EQU	1
+MSX		EQU	1
+F18A_ROW30	EQU	1
+F18A_POS_ATTRS	EQU	1
+;VDP_TEXT_SCROLL	EQU	1
 ;DEBLOCK_ON_PICO	EQU	1
 ;----------------------------------------------------------------------------
 ; Use DMA for SD-card (requires special controller's firmware)

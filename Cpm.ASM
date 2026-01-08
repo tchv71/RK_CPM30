@@ -7,7 +7,7 @@ include SCREEN.MAC
 
 IFDEF	USE_PRG_DC
 	IFDEF	EXTERNAL_PORTS
-	START_CCP	EQU 0CF00H - 400H - 1100h ; Palmira with IN/OUT ports
+	START_CCP	EQU 0CF00H - 400H - 1100h; Palmira with IN/OUT ports
 	ELSE
 	START_CCP	EQU 0CA00h - 400H ; Palmira with ports in F800-FFFF
 	ENDIF
@@ -47,12 +47,13 @@ include DEBLOCK2.ASM
 ENDIF
 IFDEF VDP9918
 include 9918.asm
+IFDEF	FONT8X16
 tmsFont:
 include font8x16.asm
 tmsFontEnd:
-IFDEF	MSX
+ELSE
 tmsFont8:
-include fontMsx.asm
+include font6X8.asm
 tmsFont8End:
 ENDIF
 	DS	0F740h - $

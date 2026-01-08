@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Исходные файлы\CPM">
+      <UniqueIdentifier>{c95f1c1a-105e-4db6-84a5-b266daa79edb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="B0FLPDSK.ASM">
@@ -105,25 +108,31 @@
     <None Include="font8x16.asm">
       <Filter>Исходные файлы</Filter>
     </None>
-    <None Include="fontMsx.asm">
-      <Filter>Исходные файлы</Filter>
-    </None>
     <None Include="DEBLOCK2.ASM">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="CPM\cpmdsm.bat">
+      <Filter>Исходные файлы\CPM</Filter>
+    </None>
     <None Include="CPM\ftp.bat">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\CPM</Filter>
     </None>
     <None Include="CPM\ftpds.bat">
+      <Filter>Исходные файлы\CPM</Filter>
+    </None>
+    <None Include="font6x8.asm">
       <Filter>Исходные файлы</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CPM\ftp.txt">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\CPM</Filter>
     </Text>
     <Text Include="CPM\ftpds.txt">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\CPM</Filter>
+    </Text>
+    <Text Include="CPM\ftpdsm3.txt">
+      <Filter>Исходные файлы\CPM</Filter>
     </Text>
   </ItemGroup>
 </Project>
