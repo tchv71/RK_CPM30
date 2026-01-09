@@ -779,50 +779,30 @@ SCRUP:
 IFDEF	VDP9918
 IFDEF VDP_TEXT_SCROLL
 	.z80
-	PUSH	BC
-	PUSH	HL
-	LD	B, T_REG_SCROLL_Y
-	LD	HL, ScrollLine
-	INC	(HL)
-	LD	A, PHYS_H
-	CP	(HL)
-	JP	NZ, $+5
-	LD	(HL), 0
-	LD	C, (HL)
+	CALL	ClearCursor
+	LD	HL,ScrollRegs
+	CALL	T_SetRegs
+	;while (VDPST & 1);    // wait for 9938 status to be idle
+	LD	BC,0
+SC001:
+	INC	BC
+	IN	A, (VDP+1)
+	AND	1
+	JP	NZ, SC001
+
+
+	;VDP_SET_REGISTER(0x0f,0); // status register to read = SR0
+	LD	BC,0F00h
 	CALL	T_WriteRegValue
-	POP	HL
-	POP	BC
-	
-	LD	A, (ScrollLine)
-	OR	A
-	JP	NZ, $+5
-	LD	A, PHYS_H
- IF 1
-	DEC	A
-	PUSH	BC
-	LD	L, A
-	LD	H, 0
-	ADD	HL, HL
-	ADD	HL, HL
-	ADD	HL, HL
-	ADD	HL, HL
-	LD	C, L
-	LD	B, H
-	ADD	HL, HL
-	ADD	HL, HL
-	ADD	HL, BC
-	POP	BC
-	;JP	DL12
- ELSE
-	LD	HL, 0
-DL01:
-	DEC	A
-	JP	Z, DL12
-	PUSH	AF
-	CALL	NXT_S
-	POP	AF
-	JP	DL01
- ENDIF
+	LD	HL, PHYS_W*(PHYS_H-1)
+	RET
+ScrollRegs:
+	DB	34,1
+	DB	38,0
+	DB	42,29
+	DB	46,0E0h
+	DB	0Fh,2
+	DB	0FFh
 DL12:
 	PUSH	BC
 	PUSH	DE
@@ -843,18 +823,6 @@ DL12:
 	STA	CURY
 	XRA	A
 	;JMP	SetTextScroll
-	.z80
-SetTextScroll:
-	PUSH	BC
-	LD	(ScrollLine), A
-	LD	C, A
-	LD	B, T_REG_SCROLL_Y
-	CALL	T_WriteRegValue
-	POP	BC
-	RET
-ScrollLine:
-	db	0
-	.8080
 ELSE ; DEF VDP_TEXT_SCROLL
 	LHLD	STRADR
 	PUSH	H

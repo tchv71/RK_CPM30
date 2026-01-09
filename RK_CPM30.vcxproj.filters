@@ -123,6 +123,9 @@
     <None Include="font6x8.asm">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="CPM.PRN">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CPM\ftp.txt">

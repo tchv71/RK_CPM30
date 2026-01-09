@@ -249,6 +249,7 @@
     <None Include="BDOS.ASM" />
     <None Include="CCP.ASM" />
     <None Include="Cpm.ASM" />
+    <None Include="CPM.PRN" />
     <None Include="CPM\cpmdsm.bat" />
     <None Include="CPM\ftp.bat" />
     <None Include="CPM\ftpds.bat" />
