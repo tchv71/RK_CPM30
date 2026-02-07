@@ -130,7 +130,7 @@ CorrTbl:
 	db	18h+80h,'F'-40h	; ^Right
 	db	13+80h, 10      ; ^Enter
 ;*** Other keys ***
-	db	7fh,	8
+	;db	7fh,	8
 
 	db	0ffh
 

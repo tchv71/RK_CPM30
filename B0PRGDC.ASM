@@ -161,7 +161,7 @@ ENDIF
 
 MAP_PORTS:
 	DB	PPI,  4, 0
-	DB	PPI2, 4, 9;1
+	DB	PPI2, 4, 1
 	DB	DISP, 2, 2
 	DB	DMA,  10h, 7
 	DB	PSG1, 4, 6
