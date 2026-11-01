@@ -50,7 +50,7 @@ DMA	equ	0FC00h;  8257 DMA chip	    	  *
 PALM_CNTRL equ	0FD00h;  Palmira control byte     *
 ;**************************************************
 ENDIF
-MEM_LO	equ	5
+MEM_LO	equ	0dh
 MEM_HI	equ	0dh
 FONT_ID	equ	10
 ELSE

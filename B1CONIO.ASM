@@ -314,17 +314,17 @@ ENDIF
 	jz	HideCursor
 	cpi	'b'
 	jz	ShowCursor
-	cpi	'A'
+	SUI	'A'
 	jz	Up
-	cpi	'B'
+	DCR	A;cpi	'B'
 	jz	Down
-	cpi	'C'
+	DCR	A;cpi	'C'
 	jz	LEFT
-	cpi	'D'
+	DCR	A;cpi	'D'
 	jz	Right
-	CPI	45H ; 'E'
+	DCR	A;CPI	45H ; 'E'
 	JZ	CLS
-	SUI	4BH ; 'K'
+	SUI	4BH-45H;4BH ; 'K'
 	JZ	DELEOL
 	DCR	A   ; 'L'
 	JZ	INSLIN 

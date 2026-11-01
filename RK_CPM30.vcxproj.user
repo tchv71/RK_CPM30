@@ -11,6 +11,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>SENDPATH=CPM\CPM.RKL
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
+    <LocalDebuggerCommandArgumentsHistory>send|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommand>"C:\Program Files (x86)\GnuWin32\bin\make.exe"</LocalDebuggerCommand>
